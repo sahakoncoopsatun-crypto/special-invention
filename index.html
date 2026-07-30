@@ -1,0 +1,1318 @@
+<!DOCTYPE html>
+<html lang="th" class="light">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ระบบประมาณการและติดตามกระแสเงินสด - สหกรณ์ออมทรัพย์สาธารณสุขสตูล จำกัด</title>
+  
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+
+  <!-- Google Fonts: Sarabun -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Sarabun:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;1,400&display=swap" rel="stylesheet" />
+
+  <!-- Font Awesome Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
+
+  <!-- Chart.js CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.2/dist/chart.umd.min.js"></script>
+
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          fontFamily: { sans: ['Sarabun', 'sans-serif'] },
+          colors: {
+            coop: {
+              50: '#f0fdf4',
+              100: '#dcfce7',
+              600: '#16a34a',
+              700: '#15803d',
+              800: '#166534',
+              900: '#14532d',
+            }
+          }
+        }
+      }
+    };
+  </script>
+
+  <style>
+    * { box-sizing: border-box; }
+    body { font-family: 'Sarabun', sans-serif; }
+    
+    ::-webkit-scrollbar { width: 6px; height: 6px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: #15803d; border-radius: 3px; }
+
+    .header-bg { background: linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #14532d 100%); }
+    .number-cell { font-variant-numeric: tabular-nums; }
+    .badge-income { background-color: #dcfce7; color: #14532d; }
+    .badge-expense { background-color: #ffe4e6; color: #9f1239; }
+    .dark .badge-income { background-color: #14532d; color: #86efac; }
+    .dark .badge-expense { background-color: #4c0519; color: #fca5a5; }
+
+    @media print {
+      .no-print { display: none !important; }
+      body { background: #ffffff !important; color: #000000 !important; }
+    }
+  </style>
+</head>
+
+<body class="bg-slate-50 dark:bg-slate-950 text-slate-800 dark:text-slate-100 min-h-screen flex flex-col transition-colors duration-200">
+
+  <!-- ===== HEADER & TOP NAVIGATION ===== -->
+  <header class="header-bg text-white sticky top-0 z-40 shadow-lg border-b border-emerald-600/30">
+    <div class="max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-8 py-3">
+      <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-3">
+        
+        <!-- Organization & System Title -->
+        <div class="flex items-center gap-3">
+          <div class="w-10 h-10 bg-emerald-600/30 rounded-xl border border-emerald-400/40 flex items-center justify-center flex-shrink-0">
+            <i class="fa-solid fa-building-columns text-emerald-300 text-lg"></i>
+          </div>
+          <div>
+            <div class="flex items-center gap-2">
+              <h1 class="font-bold text-base sm:text-lg leading-tight">ระบบประมาณการและติดตามกระแสเงินสด</h1>
+              <span id="appModeBadge" class="bg-emerald-500/20 text-emerald-300 text-[11px] px-2.5 py-0.5 rounded-full border border-emerald-400/30 font-medium">
+                โหมดการใช้งาน
+              </span>
+            </div>
+            <p class="text-xs text-slate-300">สหกรณ์ออมทรัพย์สาธารณสุขสตูล จำกัด</p>
+          </div>
+        </div>
+
+        <!-- System Mode Switcher & Tools -->
+        <div class="flex flex-wrap items-center gap-2 no-print">
+          
+          <!-- Mode Selector Buttons -->
+          <div class="flex items-center bg-slate-800/90 rounded-xl p-1 border border-slate-700 text-xs">
+            <button onclick="setSystemMode('executive')" id="btnModeExec" class="px-3 py-1.5 rounded-lg font-semibold transition-all flex items-center gap-1.5 text-slate-300">
+              <i class="fa-solid fa-chart-pie"></i>
+              <span>มุมมองผู้บริหาร</span>
+            </button>
+            <button onclick="setSystemMode('management')" id="btnModeManage" class="px-3 py-1.5 rounded-lg font-semibold transition-all flex items-center gap-1.5 text-slate-300">
+              <i class="fa-solid fa-list-check"></i>
+              <span>จัดการข้อมูล</span>
+            </button>
+          </div>
+
+          <!-- Executive Share Link Button -->
+          <button onclick="copyExecutiveLink()" title="คัดลอกลิงก์สำหรับผู้บริหารเข้าดูเท่านั้น" class="bg-indigo-700 hover:bg-indigo-600 text-white px-3 py-1.5 rounded-xl text-xs font-semibold flex items-center gap-1.5 transition-all shadow-sm">
+            <i class="fa-solid fa-link text-indigo-200"></i>
+            <span class="hidden sm:inline">คัดลอกลิงก์ผู้บริหาร</span>
+          </button>
+
+          <!-- Google Sheet Config Button (Management Mode) -->
+          <button onclick="openGoogleSheetModal()" id="btnSheetConfig" class="bg-slate-800 hover:bg-slate-700 border border-emerald-500/50 text-emerald-300 px-3 py-1.5 rounded-xl text-xs font-semibold flex items-center gap-1.5 transition-all shadow-sm manage-col">
+            <i class="fa-solid fa-file-excel text-emerald-400"></i>
+            <span id="sheetStatusText">เชื่อมต่อ Google Sheet</span>
+          </button>
+
+          <!-- Action Button: Entry Form (Management Only) -->
+          <button onclick="openDataEntryModal()" id="btnOpenEntryHeader" class="bg-emerald-600 hover:bg-emerald-500 text-white px-3 py-1.5 rounded-xl text-xs font-semibold flex items-center gap-1.5 transition-all shadow-sm manage-col">
+            <i class="fa-solid fa-plus-circle text-sm"></i>
+            <span>บันทึกข้อมูล</span>
+          </button>
+
+          <!-- Export Data Button -->
+          <button onclick="exportCSV()" title="ส่งออกข้อมูลเป็นไฟล์ CSV" class="bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-200 px-2.5 py-1.5 rounded-xl text-xs flex items-center gap-1">
+            <i class="fa-solid fa-file-csv text-emerald-400"></i>
+            <span class="hidden sm:inline">ส่งออก CSV</span>
+          </button>
+
+          <!-- Theme Toggle -->
+          <button onclick="toggleTheme()" title="เปลี่ยนธีมการแสดงผล" class="w-8 h-8 bg-slate-800 hover:bg-slate-700 border border-slate-700 text-amber-300 rounded-xl flex items-center justify-center">
+            <i class="fa-solid fa-moon text-xs" id="themeIcon"></i>
+          </button>
+
+        </div>
+
+      </div>
+    </div>
+  </header>
+
+  <!-- ===== MAIN CONTENT ===== -->
+  <main class="max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-8 py-5 flex-1 w-full space-y-5">
+
+    <!-- Notification Toast Box -->
+    <div id="toastBox" class="hidden transition-all duration-300 bg-emerald-50 dark:bg-emerald-950/70 border border-emerald-300 dark:border-emerald-800 text-emerald-900 dark:text-emerald-200 p-3 rounded-xl text-xs flex items-center justify-between shadow-sm">
+      <div class="flex items-center gap-2">
+        <i class="fa-solid fa-circle-check text-emerald-600 text-sm"></i>
+        <span id="toastMsg">ดำเนินการเรียบร้อยแล้ว</span>
+      </div>
+      <button onclick="document.getElementById('toastBox').classList.add('hidden')" class="text-slate-400 hover:text-slate-600"><i class="fa-solid fa-xmark"></i></button>
+    </div>
+
+    <!-- Executive Link Share Banner -->
+    <div id="linkBanner" class="hidden bg-indigo-50 dark:bg-indigo-950/60 border border-indigo-200 dark:border-indigo-800 text-indigo-900 dark:text-indigo-200 p-3.5 rounded-2xl text-xs flex flex-col sm:flex-row sm:items-center justify-between gap-2 shadow-sm">
+      <div class="flex items-center gap-2.5">
+        <i class="fa-solid fa-share-nodes text-indigo-600 dark:text-indigo-400 text-base"></i>
+        <div>
+          <span class="font-bold block">ลิงก์สำหรับผู้บริหารสำเร็จแล้ว:</span>
+          <span class="text-slate-600 dark:text-slate-300 font-mono text-[11px]" id="generatedLinkText"></span>
+        </div>
+      </div>
+      <div class="flex items-center gap-2">
+        <span class="text-[11px] bg-indigo-100 dark:bg-indigo-900 text-indigo-700 dark:text-indigo-300 px-2 py-1 rounded-lg">สิทธิ์อ่านอย่างเดียว</span>
+        <button onclick="document.getElementById('linkBanner').classList.add('hidden')" class="text-slate-400 hover:text-slate-600"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+    </div>
+
+    <!-- Data Dimension Clarification Explainer Banner -->
+    <div class="bg-emerald-900/10 dark:bg-emerald-950/40 border border-emerald-500/20 rounded-2xl p-3.5 text-xs text-slate-700 dark:text-slate-300 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+      <div class="flex items-start gap-2.5">
+        <div class="w-7 h-7 bg-emerald-600 text-white rounded-lg flex items-center justify-center flex-shrink-0 mt-0.5">
+          <i class="fa-solid fa-sitemap text-xs"></i>
+        </div>
+        <div>
+          <span class="font-bold text-emerald-900 dark:text-emerald-300 block mb-0.5">โครงสร้างข้อมูลและการป้องกันความซ้ำซ้อน:</span>
+          <p class="text-[11px] text-slate-600 dark:text-slate-400 leading-relaxed">
+            • <strong>มิติสิ้นเดือน:</strong> ข้อมูลยุทธศาสตร์ (ประมาณการ vs เกิดขึ้นจริง) บันทึกโดย 4 ฝ่ายงานหลัก<br/>
+            • <strong>มิติรายสัปดาห์ / รายวัน:</strong> ข้อมูลปฏิบัติการติดตามสภาพคล่องสด บันทึกโดยฝ่ายการเงิน/ผู้จัดการ (ไม่นับยอดซ้ำซ้อนกับมิติสิ้นเดือน)
+          </p>
+        </div>
+      </div>
+
+      <button onclick="consolidateDailyToMonthly()" id="btnAutoConsolidate" class="bg-indigo-600 hover:bg-indigo-500 text-white px-3 py-1.5 rounded-xl font-bold flex items-center gap-1.5 text-[11px] flex-shrink-0 transition-all manage-col shadow-sm">
+        <i class="fa-solid fa-calculator text-indigo-200"></i>
+        <span>คำนวณยอดรายวันเข้าสิ้นเดือนอัตโนมัติ</span>
+      </button>
+    </div>
+
+    <!-- Time Dimension Selector & Period Filter Bar -->
+    <div class="bg-white dark:bg-slate-900 p-3.5 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm flex flex-col md:flex-row items-center justify-between gap-3">
+      
+      <!-- Current Mode Context Description -->
+      <div class="flex items-center gap-2.5 w-full md:w-auto">
+        <div class="w-8 h-8 bg-emerald-100 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 rounded-xl flex items-center justify-center flex-shrink-0">
+          <i class="fa-solid fa-calendar-check text-sm"></i>
+        </div>
+        <div>
+          <span class="text-[11px] text-slate-400 font-medium block">มิติการรายงานข้อมูล:</span>
+          <span class="text-xs font-bold text-slate-800 dark:text-slate-200" id="currentRoleNotice">โหมดผู้บริหาร – สรุปภาพรวมกระแสเงินสดเพื่อการตัดสินใจ</span>
+        </div>
+      </div>
+
+      <!-- Dimension Switcher Buttons -->
+      <div class="flex items-center gap-1 bg-slate-100 dark:bg-slate-800 p-1 rounded-xl w-full md:w-auto justify-center">
+        <button onclick="setTimeView('month_end')" id="tabMonthEnd" class="px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all bg-white dark:bg-slate-700 text-emerald-700 dark:text-emerald-300 shadow-sm">
+          <i class="fa-solid fa-chart-pie mr-1"></i>1. สิ้นเดือน (ประมาณการ vs จริง)
+        </button>
+        <button onclick="setTimeView('weekly')" id="tabWeekly" class="px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all text-slate-500 dark:text-slate-400 hover:text-slate-800">
+          <i class="fa-solid fa-calendar-week mr-1"></i>2. รายสัปดาห์
+        </button>
+        <button onclick="setTimeView('daily')" id="tabDaily" class="px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all text-slate-500 dark:text-slate-400 hover:text-slate-800">
+          <i class="fa-solid fa-clock mr-1"></i>3. รายวัน
+        </button>
+      </div>
+
+      <!-- Select Reporting Period -->
+      <div class="flex items-center gap-2 w-full md:w-auto justify-end">
+        <label for="periodSelect" class="text-xs text-slate-500 dark:text-slate-400 font-medium whitespace-nowrap">เลือกงวดการรายงาน:</label>
+        <select id="periodSelect" onchange="renderDashboard()" class="bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-xs font-bold rounded-xl px-3 py-1.5 outline-none focus:ring-2 focus:ring-emerald-500">
+        </select>
+      </div>
+    </div>
+
+    <!-- Executive KPI Overview Cards -->
+    <div class="grid grid-cols-2 lg:grid-cols-4 gap-3.5" id="kpiGrid">
+      <!-- Generated dynamically by JS -->
+    </div>
+
+    <!-- Executive Visual Analytics Section (Charts) -->
+    <div class="grid grid-cols-1 lg:grid-cols-5 gap-4">
+      
+      <!-- Chart 1: Combo Chart (Bar + Line) for Month-End or Daily/Weekly Trend -->
+      <div id="comboChartCard" class="lg:col-span-3 bg-white dark:bg-slate-900 p-4 sm:p-5 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm space-y-3">
+        <div class="flex items-center justify-between">
+          <div>
+            <h3 class="font-bold text-slate-800 dark:text-slate-100 text-sm sm:text-base flex items-center gap-2">
+              <i class="fa-solid fa-chart-line text-indigo-600"></i>
+              <span id="chart1Title">แผนภูมิผสม (Combo Chart) เปรียบเทียบประมาณการว่าจะจ่ายจริง VS เกิดขึ้นจริง</span>
+            </h3>
+            <p class="text-xs text-slate-400" id="chart1Sub">แสดงผลเปรียบเทียบด้วยกราฟแท่ง (เกิดขึ้นจริง) ผสมกราฟเส้น (ประมาณการ) เพื่อการวิเคราะห์ผลต่างอย่างชัดเจน</p>
+          </div>
+          <span class="text-[11px] bg-indigo-100 dark:bg-indigo-950/80 text-indigo-700 dark:text-indigo-300 font-bold px-2.5 py-1 rounded-lg" id="chart1Badge">แผนภูมิผสม</span>
+        </div>
+        <div style="height: 300px; position: relative;">
+          <canvas id="mainComboChart"></canvas>
+        </div>
+      </div>
+
+      <!-- Chart 2: Cash Flow Distribution by Responsible Department -->
+      <div id="deptChartCard" class="lg:col-span-2 bg-white dark:bg-slate-900 p-4 sm:p-5 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm space-y-3">
+        <div>
+          <h3 class="font-bold text-slate-800 dark:text-slate-100 text-sm sm:text-base flex items-center gap-2">
+            <i class="fa-solid fa-sitemap text-indigo-600"></i>
+            <span>สัดส่วนกระแสเงินสดตามฝ่ายที่รับผิดชอบ</span>
+          </h3>
+          <p class="text-xs text-slate-400">จำแนกตาม ฝ่ายสินเชื่อ, การเงิน, บัญชี และธุรการพัสดุ</p>
+        </div>
+        <div style="height: 210px; position: relative;" class="flex items-center justify-center">
+          <canvas id="deptPieChart"></canvas>
+        </div>
+        <div class="grid grid-cols-2 gap-2 text-xs" id="deptLegend">
+          <!-- Department Legend generated dynamically -->
+        </div>
+      </div>
+
+    </div>
+
+    <!-- Detailed Cash Flow Statement Table -->
+    <div id="tableSectionCard" class="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden space-y-3">
+      
+      <!-- Table Filter Bar -->
+      <div class="p-4 border-b border-slate-100 dark:border-slate-800 space-y-3">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+          <div class="flex items-center gap-2">
+            <h3 class="font-bold text-slate-800 dark:text-slate-100 text-sm sm:text-base flex items-center gap-2">
+              <i class="fa-solid fa-table-list text-emerald-600"></i>ตารางรายงานข้อมูลกระแสเงินสด
+            </h3>
+            <span class="text-xs bg-emerald-100 dark:bg-emerald-950/60 text-emerald-800 dark:text-emerald-300 font-bold px-2.5 py-0.5 rounded-full" id="dataCountBadge">0 รายการ</span>
+          </div>
+          
+          <div class="text-xs text-slate-500 dark:text-slate-400" id="managementRoleBar">
+            สิทธิ์บันทึกข้อมูล: <span class="font-bold text-slate-700 dark:text-slate-300" id="responsibleRoleDesc">เจ้าหน้าที่ผู้ได้รับมอบหมายตามฝ่ายงาน</span>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-4 gap-2 no-print">
+          <div class="relative sm:col-span-2">
+            <i class="fa-solid fa-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-xs"></i>
+            <input type="text" id="searchInput" oninput="renderTable()" placeholder="ค้นหารายการรับ-จ่าย..." class="w-full pl-8 pr-3 py-1.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-xs outline-none focus:ring-2 focus:ring-emerald-500" />
+          </div>
+
+          <select id="deptFilter" onchange="renderTable()" class="bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-xs rounded-xl px-3 py-1.5 outline-none">
+            <option value="">ทุกฝ่ายที่รับผิดชอบ</option>
+            <option value="ฝ่ายสินเชื่อ">ฝ่ายสินเชื่อ</option>
+            <option value="ฝ่ายการเงิน">ฝ่ายการเงิน</option>
+            <option value="ฝ่ายบัญชี">ฝ่ายบัญชี</option>
+            <option value="ฝ่ายธุรการพัสดุ">ฝ่ายธุรการพัสดุ</option>
+          </select>
+
+          <select id="typeFilter" onchange="renderTable()" class="bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-xs rounded-xl px-3 py-1.5 outline-none">
+            <option value="">ทุกประเภทรายการ</option>
+            <option value="รายการรับ">รายการรับ (+)</option>
+            <option value="รายการจ่าย">รายการจ่าย (-)</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- Table Content -->
+      <div class="overflow-x-auto">
+        <table class="w-full text-xs sm:text-sm text-left">
+          <thead>
+            <tr class="bg-slate-50 dark:bg-slate-800/60 text-slate-500 dark:text-slate-400 border-b border-slate-100 dark:border-slate-800 font-semibold">
+              <th class="px-4 py-3 text-center w-12">ลำดับ</th>
+              <th class="px-4 py-3">รายการรับ-จ่าย</th>
+              <th class="px-4 py-3">ฝ่ายที่รับผิดชอบ</th>
+              <th class="px-4 py-3 text-center">ประเภท</th>
+              <th class="px-4 py-3 text-right" id="colEstimateHeader">ประมาณการว่าจะจ่ายจริง (บาท)</th>
+              <th class="px-4 py-3 text-right" id="colActualHeader">เกิดขึ้นจริง (บาท)</th>
+              <th class="px-4 py-3 text-right">ผลต่าง (Variance)</th>
+              <th class="px-4 py-3 text-center no-print manage-col">การจัดการ</th>
+            </tr>
+          </thead>
+          <tbody id="tableBody" class="divide-y divide-slate-100 dark:divide-slate-800">
+            <!-- Dynamic Table Rows -->
+          </tbody>
+        </table>
+      </div>
+
+    </div>
+
+  </main>
+
+  <!-- ===== DATA ENTRY & EDIT MODAL (MANAGEMENT MODE ONLY) ===== -->
+  <div id="entryModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center hidden p-4">
+    <div class="bg-white dark:bg-slate-900 rounded-2xl max-w-lg w-full border border-slate-200 dark:border-slate-800 shadow-2xl overflow-hidden">
+      
+      <!-- Modal Header -->
+      <div class="bg-slate-800 text-white p-4 flex items-center justify-between">
+        <div class="flex items-center gap-2">
+          <i class="fa-solid fa-pen-to-square text-emerald-400"></i>
+          <h3 class="font-bold text-sm" id="modalTitle">บันทึกข้อมูลกระแสเงินสด</h3>
+        </div>
+        <button onclick="closeDataEntryModal()" class="text-slate-400 hover:text-white"><i class="fa-solid fa-xmark text-base"></i></button>
+      </div>
+
+      <!-- Form Body -->
+      <form id="cashflowForm" onsubmit="saveEntry(event)" class="p-5 space-y-3.5 text-xs">
+        <input type="hidden" id="modalEditingId" value="" />
+        
+        <!-- Time Dimension Select -->
+        <div>
+          <label class="block font-semibold text-slate-700 dark:text-slate-300 mb-1">มิติการบันทึกข้อมูล:</label>
+          <select id="modalTimeDimension" onchange="updateFormFieldsByDimension()" class="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl p-2.5 outline-none font-bold text-emerald-700 dark:text-emerald-400">
+            <option value="month_end">สิ้นเดือน (เปรียบเทียบประมาณการ vs เกิดขึ้นจริง)</option>
+            <option value="weekly">รายสัปดาห์ (เจ้าหน้าที่การเงิน / ผู้จัดการ)</option>
+            <option value="daily">รายวัน (เจ้าหน้าที่การเงิน / ผู้จัดการ)</option>
+          </select>
+        </div>
+
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block font-semibold text-slate-700 dark:text-slate-300 mb-1">งวด/ประจำวันที่:</label>
+            <input type="text" id="modalPeriodName" required placeholder="เช่น มกราคม 2569 หรือ 15 ม.ค. 69" class="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl p-2.5 outline-none" />
+          </div>
+
+          <div>
+            <label class="block font-semibold text-slate-700 dark:text-slate-300 mb-1">ฝ่ายที่รับผิดชอบ:</label>
+            <select id="modalDept" required class="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl p-2.5 outline-none">
+              <option value="ฝ่ายสินเชื่อ">ฝ่ายสินเชื่อ</option>
+              <option value="ฝ่ายการเงิน">ฝ่ายการเงิน</option>
+              <option value="ฝ่ายบัญชี">ฝ่ายบัญชี</option>
+              <option value="ฝ่ายธุรการพัสดุ">ฝ่ายธุรการพัสดุ</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block font-semibold text-slate-700 dark:text-slate-300 mb-1">ประเภทรายการ:</label>
+            <select id="modalType" required class="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl p-2.5 outline-none">
+              <option value="รายการรับ">รายการรับ (+)</option>
+              <option value="รายการจ่าย">รายการจ่าย (-)</option>
+            </select>
+          </div>
+
+          <div>
+            <label class="block font-semibold text-slate-700 dark:text-slate-300 mb-1">ชื่อรายการ:</label>
+            <input type="text" id="modalItemName" required placeholder="เช่น จ่ายเงินกู้สามัญแก่สมาชิก" class="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl p-2.5 outline-none" />
+          </div>
+        </div>
+
+        <!-- Numeric Amounts Inputs -->
+        <div class="grid grid-cols-2 gap-3 bg-slate-50 dark:bg-slate-800/50 p-3 rounded-xl border border-slate-200 dark:border-slate-800" id="amountInputsContainer">
+          <div id="estimateInputGroup">
+            <label class="block font-semibold text-emerald-700 dark:text-emerald-400 mb-1">ประมาณการว่าจะจ่ายจริง (บาท):</label>
+            <input type="number" step="0.01" id="modalEstimate" placeholder="0.00" class="w-full bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl p-2.5 outline-none font-mono" />
+          </div>
+
+          <div>
+            <label class="block font-semibold text-indigo-700 dark:text-indigo-400 mb-1" id="modalActualLabel">เกิดขึ้นจริง (บาท):</label>
+            <input type="number" step="0.01" id="modalActual" required placeholder="0.00" class="w-full bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl p-2.5 outline-none font-mono" />
+          </div>
+        </div>
+
+        <div class="pt-2 flex items-center justify-end gap-2">
+          <button type="button" onclick="closeDataEntryModal()" class="px-4 py-2 rounded-xl border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800">ยกเลิก</button>
+          <button type="submit" id="btnSubmitForm" class="px-5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold shadow-md flex items-center gap-1.5">
+            <i class="fa-solid fa-floppy-disk"></i>
+            <span id="btnSubmitFormText">บันทึกรายการ</span>
+          </button>
+        </div>
+
+      </form>
+    </div>
+  </div>
+
+  <!-- ===== GOOGLE SHEETS CONFIG MODAL ===== -->
+  <div id="sheetConfigModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center hidden p-4">
+    <div class="bg-white dark:bg-slate-900 rounded-2xl max-w-2xl w-full border border-slate-200 dark:border-slate-800 shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
+      
+      <div class="bg-slate-800 text-white p-4 flex items-center justify-between flex-shrink-0">
+        <div class="flex items-center gap-2">
+          <i class="fa-solid fa-file-excel text-emerald-400 text-lg"></i>
+          <h3 class="font-bold text-sm">ตั้งค่าการเชื่อมต่อ Google Sheet</h3>
+        </div>
+        <button onclick="closeGoogleSheetModal()" class="text-slate-400 hover:text-white"><i class="fa-solid fa-xmark text-base"></i></button>
+      </div>
+
+      <div class="p-5 space-y-4 text-xs overflow-y-auto">
+        <div class="bg-emerald-50 dark:bg-emerald-950/50 p-3 rounded-xl border border-emerald-200 dark:border-emerald-800 text-emerald-900 dark:text-emerald-300">
+          <span class="font-bold block mb-1">📌 วิธีเชื่อมต่อระบบเข้ากับ Google Sheet ของสหกรณ์:</span>
+          <p class="text-[11px] leading-relaxed">
+            ท่านสามารถบันทึกและซิงค์ข้อมูลจริงไปยัง Google Sheet ได้โดยการสร้าง <strong>Google Apps Script (Web App)</strong> ในสเปรดชีต แล้วนำ Web App URL มากรอกช่องด้านล่าง
+          </p>
+        </div>
+
+        <div>
+          <label class="block font-semibold text-slate-700 dark:text-slate-300 mb-1">Google Apps Script Web App URL:</label>
+          <input type="url" id="gasUrlInput" placeholder="https://script.google.com/macros/s/AKfycb.../exec" class="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl p-2.5 font-mono text-xs outline-none focus:ring-2 focus:ring-emerald-500" />
+        </div>
+
+        <!-- Apps Script Code Box -->
+        <div class="space-y-1.5">
+          <div class="flex items-center justify-between">
+            <span class="font-semibold text-slate-700 dark:text-slate-300">โค้ด Google Apps Script (คัดลอกไปแปะใน Google Sheet):</span>
+            <button onclick="copyGasCode()" class="text-emerald-600 dark:text-emerald-400 font-bold hover:underline flex items-center gap-1">
+              <i class="fa-regular fa-copy"></i> คัดลอกโค้ด
+            </button>
+          </div>
+          <textarea id="gasCodeScript" readonly class="w-full h-40 bg-slate-900 text-emerald-400 font-mono text-[11px] p-3 rounded-xl border border-slate-700 outline-none select-all leading-normal"></textarea>
+        </div>
+
+        <div class="bg-slate-100 dark:bg-slate-800 p-3 rounded-xl space-y-1 text-slate-600 dark:text-slate-400 text-[11px]">
+          <span class="font-bold text-slate-800 dark:text-slate-200 block">ขั้นตอนการติดตั้งใน Google Sheet (3 ขั้นตอน):</span>
+          <ol class="list-decimal list-inside space-y-1">
+            <li>เปิด Google Sheet ของท่านไปที่เมนู <strong>ส่วนขยาย (Extensions) &gt; Apps Script</strong></li>
+            <li>ลบโค้ดเดิม วางโค้ดที่คัดลอกจากช่องด้านบน แล้วกดเซฟ (Ctrl+S)</li>
+            <li>กด <strong>การทบทวน/การทำให้ใช้งานได้ (Deploy) &gt; การทำให้ใช้งานได้ใหม่ (New deployment)</strong> เลือกชนิดเป็น <i>เว็บแอป (Web App)</i> กำหนดสิทธิ์ผู้เข้าถึงเป็น <i>"ทุกคน (Anyone)"</i> แล้วคัดลอก URL มาวางในช่องด้านบน</li>
+          </ol>
+        </div>
+      </div>
+
+      <div class="p-4 bg-slate-50 dark:bg-slate-800/50 border-t border-slate-200 dark:border-slate-800 flex items-center justify-between flex-shrink-0">
+        <button type="button" onclick="clearGasUrl()" class="text-rose-600 hover:underline font-semibold text-xs">ยกเลิกการเชื่อมต่อ</button>
+        <div class="flex items-center gap-2">
+          <button type="button" onclick="closeGoogleSheetModal()" class="px-4 py-2 rounded-xl border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300">ปิด</button>
+          <button type="button" onclick="saveGoogleSheetConfig()" class="px-5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold shadow-md">บันทึกการตั้งค่า</button>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ===== JAVASCRIPT LOGIC ===== -->
+  <script>
+    // Sample Initial Dataset
+    const INITIAL_DATA = [
+      { id: 'm1', dimension: 'month_end', period: 'มกราคม 2569', dept: 'ฝ่ายสินเชื่อ', type: 'รายการจ่าย', name: 'จ่ายเงินกู้สามัญแก่สมาชิก', estimate: 12000000, actual: 11500000 },
+      { id: 'm2', dimension: 'month_end', period: 'มกราคม 2569', dept: 'ฝ่ายสินเชื่อ', type: 'รายการจ่าย', name: 'จ่ายเงินกู้เพื่อเหตุฉุกเฉิน', estimate: 2500000, actual: 2800000 },
+      { id: 'm3', dimension: 'month_end', period: 'มกราคม 2569', dept: 'ฝ่ายสินเชื่อ', type: 'รายการรับ', name: 'รับชำระหนี้เงินกู้สามัญและฉุกเฉิน', estimate: 9500000, actual: 9800000 },
+      
+      { id: 'm4', dimension: 'month_end', period: 'มกราคม 2569', dept: 'ฝ่ายการเงิน', type: 'รายการรับ', name: 'รับฝากเงินออมทรัพย์และประจำ', estimate: 4000000, actual: 3800000 },
+      { id: 'm5', dimension: 'month_end', period: 'มกราคม 2569', dept: 'ฝ่ายการเงิน', type: 'รายการจ่าย', name: 'จ่ายถอนเงินฝากสมาชิก', estimate: 3500000, actual: 4100000 },
+      { id: 'm6', dimension: 'month_end', period: 'มกราคม 2569', dept: 'ฝ่ายการเงิน', type: 'รายการรับ', name: 'รับค่าหุ้นรายเดือน', estimate: 3200000, actual: 3200000 },
+
+      { id: 'm7', dimension: 'month_end', period: 'มกราคม 2569', dept: 'ฝ่ายบัญชี', type: 'รายการจ่าย', name: 'จ่ายดอกเบี้ยเงินฝากสมาชิก', estimate: 1800000, actual: 1750000 },
+      { id: 'm8', dimension: 'month_end', period: 'มกราคม 2569', dept: 'ฝ่ายบัญชี', type: 'รายการจ่าย', name: 'ค่าใช้จ่ายบริหารงานและเงินเดือนเจ้าหน้าที่', estimate: 850000, actual: 820000 },
+
+      { id: 'm9', dimension: 'month_end', period: 'มกราคม 2569', dept: 'ฝ่ายธุรการพัสดุ', type: 'รายการจ่าย', name: 'จ่ายสวัสดิการสมาชิกและสงเคราะห์ศพ', estimate: 1200000, actual: 1050000 },
+      { id: 'm10', dimension: 'month_end', period: 'มกราคม 2569', dept: 'ฝ่ายธุรการพัสดุ', type: 'รายการจ่าย', name: 'ค่าวัสดุอุปกรณ์สำนักงานและครุภัณฑ์', estimate: 250000, actual: 210000 },
+
+      { id: 'w1', dimension: 'weekly', period: 'สัปดาห์ที่ 1 (1-7 ม.ค.)', dept: 'ฝ่ายการเงิน', type: 'รายการรับ', name: 'รับชำระหนี้ผ่านระบบหักบัญชีเงินเดือน', estimate: 0, actual: 4200000 },
+      { id: 'w2', dimension: 'weekly', period: 'สัปดาห์ที่ 1 (1-7 ม.ค.)', dept: 'ฝ่ายการเงิน', type: 'รายการจ่าย', name: 'จ่ายเงินกู้ฉุกเฉินประจำสัปดาห์', estimate: 0, actual: 1100000 },
+
+      { id: 'd1', dimension: 'daily', period: '28 ม.ค. 2569', dept: 'ฝ่ายการเงิน', type: 'รายการรับ', name: 'รับเงินสดเคาน์เตอร์การเงินประจำวัน', estimate: 0, actual: 350000 },
+      { id: 'd2', dimension: 'daily', period: '28 ม.ค. 2569', dept: 'ฝ่ายการเงิน', type: 'รายการจ่าย', name: 'จ่ายกู้ฉุกเฉินผ่านเคาน์เตอร์การเงิน', estimate: 0, actual: 210000 }
+    ];
+
+    // Google Apps Script Source Template for Users
+    const GAS_SCRIPT_TEMPLATE = `function doGet(e) {
+  var sheet = SpreadsheetApp.getActiveSpreadsheet().getActiveSheet();
+  var data = sheet.getDataRange().getValues();
+  if (data.length <= 1) {
+    return ContentService.createTextOutput(JSON.stringify([])).setMimeType(ContentService.MimeType.JSON);
+  }
+  var result = [];
+  for (var i = 1; i < data.length; i++) {
+    var row = data[i];
+    if (!row[0]) continue;
+    result.push({
+      id: String(row[0]),
+      dimension: String(row[1]),
+      period: String(row[2]),
+      dept: String(row[3]),
+      type: String(row[4]),
+      name: String(row[5]),
+      estimate: Number(row[6]) || 0,
+      actual: Number(row[7]) || 0
+    });
+  }
+  return ContentService.createTextOutput(JSON.stringify(result)).setMimeType(ContentService.MimeType.JSON);
+}
+
+function doPost(e) {
+  var lock = LockService.getScriptLock();
+  lock.tryLock(10000);
+  try {
+    var sheet = SpreadsheetApp.getActiveSpreadsheet().getActiveSheet();
+    var payload = JSON.parse(e.postData.contents);
+    var action = payload.action;
+    var item = payload.item;
+
+    if (sheet.getLastRow() === 0) {
+      sheet.appendRow(['ID', 'Dimension', 'Period', 'Department', 'Type', 'Item Name', 'Estimate', 'Actual']);
+    }
+
+    if (action === 'create') {
+      sheet.appendRow([item.id, item.dimension, item.period, item.dept, item.type, item.name, item.estimate, item.actual]);
+    } else if (action === 'update') {
+      var data = sheet.getDataRange().getValues();
+      for (var i = 1; i < data.length; i++) {
+        if (String(data[i][0]) === String(item.id)) {
+          sheet.getRange(i + 1, 1, 1, 8).setValues([[item.id, item.dimension, item.period, item.dept, item.type, item.name, item.estimate, item.actual]]);
+          break;
+        }
+      }
+    } else if (action === 'delete') {
+      var data = sheet.getDataRange().getValues();
+      for (var i = 1; i < data.length; i++) {
+        if (String(data[i][0]) === String(payload.id)) {
+          sheet.deleteRow(i + 1);
+          break;
+        }
+      }
+    }
+    return ContentService.createTextOutput(JSON.stringify({ status: 'success' })).setMimeType(ContentService.MimeType.JSON);
+  } catch (error) {
+    return ContentService.createTextOutput(JSON.stringify({ status: 'error', message: error.toString() })).setMimeType(ContentService.MimeType.JSON);
+  } finally {
+    lock.releaseLock();
+  }
+}`;
+
+    // Application Global State
+    let appData = [];
+    let systemMode = 'executive'; 
+    let currentTimeView = 'month_end'; 
+    let mainChartInstance = null;
+    let deptChartInstance = null;
+    let isDark = false;
+    let gasWebUrl = localStorage.getItem('satun_coop_gas_url') || '';
+
+    // Initialization
+    window.addEventListener('DOMContentLoaded', () => {
+      initTheme();
+      document.getElementById('gasCodeScript').value = GAS_SCRIPT_TEMPLATE;
+      updateSheetStatusUI();
+
+      // Check URL Query Parameter
+      const urlParams = new URLSearchParams(window.location.search);
+      if (urlParams.get('mode') === 'executive') {
+        setSystemMode('executive');
+      } else if (urlParams.get('mode') === 'management') {
+        setSystemMode('management');
+      } else {
+        setSystemMode('executive');
+      }
+
+      loadDataFromSource();
+    });
+
+    async function loadDataFromSource() {
+      if (gasWebUrl) {
+        showToast('กำลังโหลดข้อมูลจาก Google Sheet...');
+        try {
+          const res = await fetch(gasWebUrl);
+          if (res.ok) {
+            const data = await res.json();
+            if (Array.isArray(data) && data.length > 0) {
+              appData = data;
+              saveToLocalStorage();
+              showToast('โหลดข้อมูลจาก Google Sheet สำเร็จ');
+              setTimeView('month_end');
+              return;
+            }
+          }
+        } catch (e) {
+          console.warn('Cannot fetch from Google Sheet, falling back to LocalStorage', e);
+          showToast('ไม่สามารถเชื่อมต่อ Google Sheet ได้ ใช้ข้อมูลสำรองในเครื่องแทน');
+        }
+      }
+
+      loadStoredLocalStorage();
+      setTimeView('month_end');
+    }
+
+    function loadStoredLocalStorage() {
+      const stored = localStorage.getItem('satun_coop_cashflow_data_v4');
+      if (stored) {
+        try { appData = JSON.parse(stored); } catch (e) { appData = [...INITIAL_DATA]; }
+      } else {
+        appData = [...INITIAL_DATA];
+        saveToLocalStorage();
+      }
+    }
+
+    function saveToLocalStorage() {
+      localStorage.setItem('satun_coop_cashflow_data_v4', JSON.stringify(appData));
+    }
+
+    // Google Sheets HTTP Sync Helper
+    async function syncToGoogleSheet(action, payload) {
+      if (!gasWebUrl) return true; // Local mode
+
+      try {
+        const res = await fetch(gasWebUrl, {
+          method: 'POST',
+          headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+          body: JSON.stringify({ action: action, ...payload })
+        });
+        const json = await res.json();
+        return json.status === 'success';
+      } catch (err) {
+        console.error('Google Sheet Sync Error:', err);
+        return false;
+      }
+    }
+
+    function setSystemMode(mode) {
+      systemMode = mode;
+      const btnExec = document.getElementById('btnModeExec');
+      const btnManage = document.getElementById('btnModeManage');
+      const badge = document.getElementById('appModeBadge');
+      const notice = document.getElementById('currentRoleNotice');
+      const btnOpenHeader = document.getElementById('btnOpenEntryHeader');
+      const manageCols = document.querySelectorAll('.manage-col');
+      const comboChartCard = document.getElementById('comboChartCard');
+      const deptChartCard = document.getElementById('deptChartCard');
+      const tableSectionCard = document.getElementById('tableSectionCard');
+
+      if (mode === 'executive') {
+        btnExec.className = "px-3 py-1.5 rounded-lg font-semibold transition-all bg-emerald-600 text-white shadow-sm";
+        btnManage.className = "px-3 py-1.5 rounded-lg font-semibold transition-all text-slate-400 hover:text-white";
+        badge.textContent = "สิทธิ์ผู้บริหาร (อ่านอย่างเดียว)";
+        badge.className = "bg-emerald-500/20 text-emerald-300 text-[11px] px-2.5 py-0.5 rounded-full border border-emerald-400/30 font-medium";
+        notice.textContent = "โหมดผู้บริหาร – สรุปภาพรวมการบริหารกระแสเงินสดและแผนภูมิวิเคราะห์";
+        
+        if (btnOpenHeader) btnOpenHeader.style.display = 'none';
+        manageCols.forEach(col => col.style.display = 'none');
+
+        if (comboChartCard) comboChartCard.className = "lg:col-span-5 bg-white dark:bg-slate-900 p-4 sm:p-5 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm space-y-3";
+        if (deptChartCard) deptChartCard.classList.add('hidden');
+        if (tableSectionCard) tableSectionCard.classList.add('hidden');
+      } else {
+        btnManage.className = "px-3 py-1.5 rounded-lg font-semibold transition-all bg-amber-600 text-white shadow-sm";
+        btnExec.className = "px-3 py-1.5 rounded-lg font-semibold transition-all text-slate-400 hover:text-white";
+        badge.textContent = "โหมดจัดการข้อมูล (บันทึก/แก้ไข)";
+        badge.className = "bg-amber-500/20 text-amber-300 text-[11px] px-2.5 py-0.5 rounded-full border border-amber-400/30 font-medium";
+        notice.textContent = "โหมดจัดการข้อมูล – บันทึกประมาณการและยอดเกิดขึ้นจริงตามฝ่ายรับผิดชอบ";
+        
+        if (btnOpenHeader) btnOpenHeader.style.display = 'inline-flex';
+        manageCols.forEach(col => col.style.display = 'inline-flex');
+
+        if (comboChartCard) comboChartCard.className = "lg:col-span-3 bg-white dark:bg-slate-900 p-4 sm:p-5 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm space-y-3";
+        if (deptChartCard) deptChartCard.classList.remove('hidden');
+        if (tableSectionCard) tableSectionCard.classList.remove('hidden');
+      }
+
+      renderDashboard();
+    }
+
+    function setTimeView(view) {
+      currentTimeView = view;
+      ['month_end', 'weekly', 'daily'].forEach(v => {
+        const btn = document.getElementById(v === 'month_end' ? 'tabMonthEnd' : (v === 'weekly' ? 'tabWeekly' : 'tabDaily'));
+        if (v === view) {
+          btn.className = "px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all bg-white dark:bg-slate-700 text-emerald-700 dark:text-emerald-300 shadow-sm";
+        } else {
+          btn.className = "px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all text-slate-500 dark:text-slate-400 hover:text-slate-800";
+        }
+      });
+
+      const chartBadge = document.getElementById('chart1Badge');
+      const chart1Title = document.getElementById('chart1Title');
+      const chart1Sub = document.getElementById('chart1Sub');
+      const estHeader = document.getElementById('colEstimateHeader');
+      const actHeader = document.getElementById('colActualHeader');
+
+      if (view === 'month_end') {
+        chartBadge.textContent = 'แผนภูมิผสม (Combo)';
+        chart1Title.textContent = 'แผนภูมิผสม (Combo Chart) เปรียบเทียบประมาณการว่าจะจ่ายจริง VS เกิดขึ้นจริง';
+        chart1Sub.textContent = 'เปรียบเทียบเป้าหมายประมาณการ (กราฟเส้น) ชนกับยอดเกิดขึ้นจริง (กราฟแท่ง) จำแนกตามรายการ';
+        estHeader.textContent = 'ประมาณการว่าจะจ่ายจริง (บาท)';
+        actHeader.textContent = 'เกิดขึ้นจริง (บาท)';
+      } else if (view === 'weekly') {
+        chartBadge.textContent = 'รายสัปดาห์ (Combo)';
+        chart1Title.textContent = 'แผนภูมิผสมสรุปกระแสเงินสดรายสัปดาห์';
+        chart1Sub.textContent = 'แสดงยอดเงินสดเกิดขึ้นจริง (กราฟแท่ง) ควบคู่กับเส้นแนวโน้มการเคลื่อนไหว (กราฟเส้น)';
+        estHeader.textContent = 'เป้าหมายงบประมาณ';
+        actHeader.textContent = 'เกิดขึ้นจริง (บาท)';
+      } else {
+        chartBadge.textContent = 'รายวัน (Combo)';
+        chart1Title.textContent = 'แผนภูมิผสมสรุปกระแสเงินสดรายวัน';
+        chart1Sub.textContent = 'แสดงการเคลื่อนไหวของเงินสดรับ-จ่ายจริงรายวัน (กราฟแท่ง) และทิศทางแนวโน้ม (กราฟเส้น)';
+        estHeader.textContent = 'เป้าหมายงบประมาณ';
+        actHeader.textContent = 'เกิดขึ้นจริง (บาท)';
+      }
+
+      populatePeriodDropdown();
+      renderDashboard();
+    }
+
+    function populatePeriodDropdown() {
+      const select = document.getElementById('periodSelect');
+      const filtered = appData.filter(item => item.dimension === currentTimeView);
+      const periods = [...new Set(filtered.map(i => i.period))];
+
+      select.innerHTML = '';
+      if (periods.length === 0) {
+        select.innerHTML = '<option value="">ไม่มีข้อมูลในงวดนี้</option>';
+        return;
+      }
+
+      periods.forEach(p => {
+        const opt = document.createElement('option');
+        opt.value = p;
+        opt.textContent = p;
+        select.appendChild(opt);
+      });
+      select.value = periods[0] || '';
+    }
+
+    function renderDashboard() {
+      const selectedPeriod = document.getElementById('periodSelect').value;
+      const periodData = appData.filter(i => i.dimension === currentTimeView && i.period === selectedPeriod);
+
+      renderKPIs(periodData);
+      renderCharts(periodData);
+      renderTable();
+    }
+
+    function renderKPIs(data) {
+      const incomeData = data.filter(i => i.type === 'รายการรับ');
+      const expenseData = data.filter(i => i.type === 'รายการจ่าย');
+
+      const estIncome = incomeData.reduce((s, i) => s + (i.estimate || 0), 0);
+      const actIncome = incomeData.reduce((s, i) => s + (i.actual || 0), 0);
+
+      const estExpense = expenseData.reduce((s, i) => s + (i.estimate || 0), 0);
+      const actExpense = expenseData.reduce((s, i) => s + (i.actual || 0), 0);
+
+      const netActual = actIncome - actExpense;
+      const netEstimate = estIncome - estExpense;
+
+      const kpiContainer = document.getElementById('kpiGrid');
+
+      if (currentTimeView === 'month_end') {
+        kpiContainer.innerHTML = `
+          <div class="bg-white dark:bg-slate-900 p-4 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm relative overflow-hidden">
+            <div class="flex items-center justify-between mb-1.5">
+              <span class="text-xs text-slate-500 dark:text-slate-400 font-semibold">รายรับรวม (เกิดขึ้นจริง)</span>
+              <span class="w-7 h-7 bg-emerald-100 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-300 rounded-lg flex items-center justify-center text-xs"><i class="fa-solid fa-arrow-down-left"></i></span>
+            </div>
+            <p class="text-lg font-bold text-slate-800 dark:text-slate-100 number-cell">${fmt(actIncome)} ฿</p>
+            <div class="flex items-center justify-between text-[11px] mt-1.5 text-slate-500">
+              <span>ประมาณการ: ${fmtShort(estIncome)}</span>
+              <span class="${actIncome >= estIncome ? 'text-emerald-600 font-bold' : 'text-amber-600 font-bold'}">${estIncome > 0 ? ((actIncome/estIncome)*100).toFixed(1) : 100}%</span>
+            </div>
+          </div>
+
+          <div class="bg-white dark:bg-slate-900 p-4 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm relative overflow-hidden">
+            <div class="flex items-center justify-between mb-1.5">
+              <span class="text-xs text-slate-500 dark:text-slate-400 font-semibold">รายจ่ายรวม (เกิดขึ้นจริง)</span>
+              <span class="w-7 h-7 bg-rose-100 dark:bg-rose-950 text-rose-700 dark:text-rose-300 rounded-lg flex items-center justify-center text-xs"><i class="fa-solid fa-arrow-up-right"></i></span>
+            </div>
+            <p class="text-lg font-bold text-slate-800 dark:text-slate-100 number-cell">${fmt(actExpense)} ฿</p>
+            <div class="flex items-center justify-between text-[11px] mt-1.5 text-slate-500">
+              <span>ประมาณการ: ${fmtShort(estExpense)}</span>
+              <span class="${actExpense <= estExpense ? 'text-emerald-600 font-bold' : 'text-rose-600 font-bold'}">${estExpense > 0 ? ((actExpense/estExpense)*100).toFixed(1) : 100}%</span>
+            </div>
+          </div>
+
+          <div class="bg-white dark:bg-slate-900 p-4 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm relative overflow-hidden">
+            <div class="flex items-center justify-between mb-1.5">
+              <span class="text-xs text-slate-500 dark:text-slate-400 font-semibold">กระแสเงินสดสุทธิ (Net Cash)</span>
+              <span class="w-7 h-7 bg-indigo-100 dark:bg-indigo-950 text-indigo-700 dark:text-indigo-300 rounded-lg flex items-center justify-center text-xs"><i class="fa-solid fa-scale-balanced"></i></span>
+            </div>
+            <p class="text-lg font-bold ${netActual >= 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-600'} number-cell">${netActual < 0 ? '' : '+'}${fmt(netActual)} ฿</p>
+            <p class="text-[11px] text-slate-500 mt-1.5">ประมาณการสุทธิ: ${fmtShort(netEstimate)} ฿</p>
+          </div>
+
+          <div class="bg-white dark:bg-slate-900 p-4 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm relative overflow-hidden">
+            <div class="flex items-center justify-between mb-1.5">
+              <span class="text-xs text-slate-500 dark:text-slate-400 font-semibold">จำนวนรายการรับ-จ่าย</span>
+              <span class="w-7 h-7 bg-amber-100 dark:bg-amber-950 text-amber-700 dark:text-amber-300 rounded-lg flex items-center justify-center text-xs"><i class="fa-solid fa-list"></i></span>
+            </div>
+            <p class="text-lg font-bold text-slate-800 dark:text-slate-100">${data.length} รายการ</p>
+            <p class="text-[11px] text-slate-500 mt-1.5">ครอบคลุม 4 ฝ่ายที่รับผิดชอบ</p>
+          </div>
+        `;
+      } else {
+        kpiContainer.innerHTML = `
+          <div class="bg-white dark:bg-slate-900 p-4 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm">
+            <span class="text-xs text-slate-500 dark:text-slate-400 font-semibold block mb-1">ยอดรับจริงสะสม</span>
+            <p class="text-lg font-bold text-emerald-600 dark:text-emerald-400 number-cell">+${fmt(actIncome)} ฿</p>
+          </div>
+          <div class="bg-white dark:bg-slate-900 p-4 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm">
+            <span class="text-xs text-slate-500 dark:text-slate-400 font-semibold block mb-1">ยอดจ่ายจริงสะสม</span>
+            <p class="text-lg font-bold text-rose-600 dark:text-rose-400 number-cell">-${fmt(actExpense)} ฿</p>
+          </div>
+          <div class="bg-white dark:bg-slate-900 p-4 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm">
+            <span class="text-xs text-slate-500 dark:text-slate-400 font-semibold block mb-1">เงินสดคงเหลือสุทธิ</span>
+            <p class="text-lg font-bold ${netActual >= 0 ? 'text-indigo-600 dark:text-indigo-400' : 'text-rose-600'} number-cell">${fmt(netActual)} ฿</p>
+          </div>
+          <div class="bg-white dark:bg-slate-900 p-4 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm">
+            <span class="text-xs text-slate-500 dark:text-slate-400 font-semibold block mb-1">หน่วยงานผู้บันทึกหลัก</span>
+            <p class="text-xs font-bold text-slate-700 dark:text-slate-200 mt-1">เจ้าหน้าที่การเงิน / ผู้จัดการ</p>
+          </div>
+        `;
+      }
+    }
+
+    function renderCharts(data) {
+      const textColor = isDark ? '#94a3b8' : '#64748b';
+      const gridColor = isDark ? 'rgba(148,163,184,0.1)' : 'rgba(226,232,240,0.8)';
+
+      if (mainChartInstance) mainChartInstance.destroy();
+      const mainCtx = document.getElementById('mainComboChart').getContext('2d');
+      const labels = data.map(i => i.name.length > 20 ? i.name.slice(0, 20) + '...' : i.name);
+
+      if (currentTimeView === 'month_end') {
+        mainChartInstance = new Chart(mainCtx, {
+          type: 'bar',
+          data: {
+            labels: labels,
+            datasets: [
+              {
+                type: 'bar',
+                label: 'เกิดขึ้นจริง (Actual)',
+                data: data.map(i => i.actual),
+                backgroundColor: data.map(i => i.type === 'รายการรับ' ? 'rgba(22, 163, 74, 0.85)' : 'rgba(225, 29, 72, 0.85)'),
+                borderColor: data.map(i => i.type === 'รายการรับ' ? '#16a34a' : '#e11d48'),
+                borderWidth: 1,
+                borderRadius: 6,
+                order: 2
+              },
+              {
+                type: 'line',
+                label: 'ประมาณการว่าจะจ่ายจริง (Estimate)',
+                data: data.map(i => i.estimate || 0),
+                borderColor: '#4f46e5',
+                backgroundColor: 'rgba(79, 70, 229, 0.1)',
+                borderWidth: 3,
+                pointBackgroundColor: '#4f46e5',
+                pointBorderColor: '#ffffff',
+                pointBorderWidth: 2,
+                pointRadius: 6,
+                pointHoverRadius: 8,
+                tension: 0.3,
+                fill: false,
+                order: 1
+              }
+            ]
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+              legend: {
+                display: true,
+                position: 'top',
+                labels: { color: textColor, font: { family: 'Sarabun', size: 11, weight: '500' }, usePointStyle: true }
+              },
+              tooltip: {
+                callbacks: { label: ctx => ` ${ctx.dataset.label}: ${fmt(ctx.raw)} บาท` }
+              }
+            },
+            scales: {
+              x: { ticks: { color: textColor, font: { family: 'Sarabun', size: 10 } }, grid: { display: false } },
+              y: { ticks: { color: textColor, font: { family: 'Sarabun', size: 10 }, callback: v => fmtShort(v) }, grid: { color: gridColor } }
+            }
+          }
+        });
+      } else {
+        mainChartInstance = new Chart(mainCtx, {
+          type: 'bar',
+          data: {
+            labels: labels,
+            datasets: [
+              {
+                type: 'bar',
+                label: 'เกิดขึ้นจริง (Actual)',
+                data: data.map(i => i.actual),
+                backgroundColor: data.map(i => i.type === 'รายการรับ' ? 'rgba(22, 163, 74, 0.85)' : 'rgba(225, 29, 72, 0.85)'),
+                borderRadius: 6,
+                order: 2
+              },
+              {
+                type: 'line',
+                label: 'แนวโน้มการเคลื่อนไหว (Trend)',
+                data: data.map(i => i.actual),
+                borderColor: '#0284c7',
+                borderWidth: 2.5,
+                borderDash: [4, 4],
+                pointBackgroundColor: '#0284c7',
+                pointRadius: 5,
+                tension: 0.3,
+                fill: false,
+                order: 1
+              }
+            ]
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+              legend: { display: true, position: 'top', labels: { color: textColor, font: { family: 'Sarabun', size: 11 } } },
+              tooltip: { callbacks: { label: ctx => ` ${ctx.dataset.label}: ${fmt(ctx.raw)} บาท` } }
+            },
+            scales: {
+              x: { ticks: { color: textColor, font: { family: 'Sarabun', size: 10 } }, grid: { display: false } },
+              y: { ticks: { color: textColor, font: { family: 'Sarabun', size: 10 }, callback: v => fmtShort(v) }, grid: { color: gridColor } }
+            }
+          }
+        });
+      }
+
+      if (deptChartInstance) deptChartInstance.destroy();
+      const deptCtx = document.getElementById('deptPieChart').getContext('2d');
+
+      const depts = ['ฝ่ายสินเชื่อ', 'ฝ่ายการเงิน', 'ฝ่ายบัญชี', 'ฝ่ายธุรการพัสดุ'];
+      const deptTotals = depts.map(d => data.filter(i => i.dept === d).reduce((s, i) => s + (i.actual || 0), 0));
+      const colors = ['#16a34a', '#4f46e5', '#d97706', '#db2777'];
+
+      deptChartInstance = new Chart(deptCtx, {
+        type: 'doughnut',
+        data: {
+          labels: depts,
+          datasets: [{ data: deptTotals, backgroundColor: colors, borderWidth: 2, borderColor: isDark ? '#0f172a' : '#ffffff' }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          cutout: '68%',
+          plugins: {
+            legend: { display: false },
+            tooltip: { callbacks: { label: ctx => ` ${depts[ctx.dataIndex]}: ${fmt(ctx.raw)} บาท` } }
+          }
+        }
+      });
+
+      const totalAll = deptTotals.reduce((a, b) => a + b, 0);
+      document.getElementById('deptLegend').innerHTML = depts.map((d, idx) => `
+        <div class="flex items-center gap-1.5 bg-slate-50 dark:bg-slate-800 p-1.5 rounded-lg border border-slate-100 dark:border-slate-800">
+          <span class="w-2.5 h-2.5 rounded-full flex-shrink-0" style="background-color:${colors[idx]}"></span>
+          <div class="min-w-0">
+            <p class="text-[10px] text-slate-400 truncate">${d}</p>
+            <p class="text-xs font-bold text-slate-700 dark:text-slate-200 number-cell">${fmtShort(deptTotals[idx])} (${totalAll > 0 ? ((deptTotals[idx]/totalAll)*100).toFixed(0) : 0}%)</p>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    function renderTable() {
+      const selectedPeriod = document.getElementById('periodSelect').value;
+      const search = (document.getElementById('searchInput').value || '').toLowerCase();
+      const dept = document.getElementById('deptFilter').value;
+      const type = document.getElementById('typeFilter').value;
+
+      let filtered = appData.filter(i => i.dimension === currentTimeView && i.period === selectedPeriod);
+
+      if (search) filtered = filtered.filter(i => i.name.toLowerCase().includes(search));
+      if (dept) filtered = filtered.filter(i => i.dept === dept);
+      if (type) filtered = filtered.filter(i => i.type === type);
+
+      document.getElementById('dataCountBadge').textContent = `${filtered.length} รายการ`;
+      const tbody = document.getElementById('tableBody');
+
+      if (filtered.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="8" class="text-center py-8 text-slate-400">ไม่พบข้อมูลรายการรับ-จ่ายตามเงื่อนไขที่เลือก</td></tr>`;
+        return;
+      }
+
+      tbody.innerHTML = filtered.map((item, index) => {
+        const isIncome = item.type === 'รายการรับ';
+        const variance = (item.actual || 0) - (item.estimate || 0);
+
+        return `
+          <tr class="hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors">
+            <td class="px-4 py-3 text-center text-slate-400 font-mono">${index + 1}</td>
+            <td class="px-4 py-3 font-medium text-slate-800 dark:text-slate-200">${item.name}</td>
+            <td class="px-4 py-3 text-slate-500 dark:text-slate-400">
+              <span class="inline-flex items-center gap-1 bg-slate-100 dark:bg-slate-800 px-2 py-0.5 rounded-md text-[11px]">
+                <i class="fa-solid fa-building text-[9px] text-emerald-600"></i>${item.dept}
+              </span>
+            </td>
+            <td class="px-4 py-3 text-center">
+              <span class="px-2.5 py-0.5 rounded-full text-[11px] font-semibold ${isIncome ? 'badge-income' : 'badge-expense'}">
+                ${item.type}
+              </span>
+            </td>
+            <td class="px-4 py-3 text-right font-mono text-slate-500">${item.estimate ? fmt(item.estimate) : '-'}</td>
+            <td class="px-4 py-3 text-right font-mono font-bold ${isIncome ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-600 dark:text-rose-400'}">
+              ${fmt(item.actual)}
+            </td>
+            <td class="px-4 py-3 text-right font-mono text-xs ${variance >= 0 ? 'text-emerald-600 font-semibold' : 'text-rose-600 font-semibold'}">
+              ${currentTimeView === 'month_end' ? (variance >= 0 ? '+' : '') + fmt(variance) : '-'}
+            </td>
+            <td class="px-4 py-3 text-center no-print manage-col" style="${systemMode === 'executive' ? 'display:none;' : ''}">
+              <div class="flex items-center justify-center gap-2">
+                <button onclick="editEntry('${item.id}')" class="text-amber-600 hover:text-amber-700 p-1" title="แก้ไขรายการ"><i class="fa-solid fa-pen-to-square"></i></button>
+                <button onclick="deleteEntry('${item.id}')" class="text-rose-500 hover:text-rose-700 p-1" title="ลบรายการ"><i class="fa-solid fa-trash-can"></i></button>
+              </div>
+            </td>
+          </tr>
+        `;
+      }).join('');
+    }
+
+    // Form & Entry Management
+    function openDataEntryModal(editId = null) {
+      if (systemMode === 'executive') return;
+      
+      const modal = document.getElementById('entryModal');
+      const title = document.getElementById('modalTitle');
+      const btnText = document.getElementById('btnSubmitFormText');
+      const editingIdInput = document.getElementById('modalEditingId');
+
+      if (editId) {
+        const item = appData.find(i => i.id === editId);
+        if (!item) return;
+
+        editingIdInput.value = item.id;
+        title.textContent = 'แก้ไขข้อมูลกระแสเงินสด';
+        btnText.textContent = 'อัปเดตรายการ';
+
+        document.getElementById('modalTimeDimension').value = item.dimension;
+        document.getElementById('modalPeriodName').value = item.period;
+        document.getElementById('modalDept').value = item.dept;
+        document.getElementById('modalType').value = item.type;
+        document.getElementById('modalItemName').value = item.name;
+        document.getElementById('modalEstimate').value = item.estimate || 0;
+        document.getElementById('modalActual').value = item.actual || 0;
+      } else {
+        editingIdInput.value = '';
+        title.textContent = 'บันทึกข้อมูลกระแสเงินสด';
+        btnText.textContent = 'บันทึกรายการ';
+
+        document.getElementById('cashflowForm').reset();
+        document.getElementById('modalTimeDimension').value = currentTimeView;
+      }
+
+      updateFormFieldsByDimension();
+      modal.classList.remove('hidden');
+    }
+
+    function editEntry(id) {
+      openDataEntryModal(id);
+    }
+
+    function closeDataEntryModal() {
+      document.getElementById('entryModal').classList.add('hidden');
+      document.getElementById('cashflowForm').reset();
+      document.getElementById('modalEditingId').value = '';
+    }
+
+    function updateFormFieldsByDimension() {
+      const dim = document.getElementById('modalTimeDimension').value;
+      const estGroup = document.getElementById('estimateInputGroup');
+      const actualLabel = document.getElementById('modalActualLabel');
+
+      if (dim === 'month_end') {
+        estGroup.style.display = 'block';
+        actualLabel.textContent = 'เกิดขึ้นจริง (บาท):';
+      } else {
+        estGroup.style.display = 'none';
+        actualLabel.textContent = 'จำนวนเงินเกิดขึ้นจริง (บาท):';
+      }
+    }
+
+    async function saveEntry(e) {
+      e.preventDefault();
+
+      const editingId = document.getElementById('modalEditingId').value;
+      const dim = document.getElementById('modalTimeDimension').value;
+      const period = document.getElementById('modalPeriodName').value.trim();
+      const dept = document.getElementById('modalDept').value;
+      const type = document.getElementById('modalType').value;
+      const name = document.getElementById('modalItemName').value.trim();
+      const estimate = parseFloat(document.getElementById('modalEstimate').value) || 0;
+      const actual = parseFloat(document.getElementById('modalActual').value) || 0;
+
+      const itemData = {
+        id: editingId || ('user_' + Date.now()),
+        dimension: dim,
+        period: period,
+        dept: dept,
+        type: type,
+        name: name,
+        estimate: estimate,
+        actual: actual
+      };
+
+      const action = editingId ? 'update' : 'create';
+      showToast(editingId ? 'กำลังบันทึกการแก้ไขไปยัง Google Sheet...' : 'กำลังบันทึกรายการไปยัง Google Sheet...');
+
+      // Sync to Google Sheet API
+      const success = await syncToGoogleSheet(action, { item: itemData });
+
+      if (editingId) {
+        const index = appData.findIndex(i => i.id === editingId);
+        if (index !== -1) appData[index] = itemData;
+      } else {
+        appData.unshift(itemData);
+      }
+
+      saveToLocalStorage();
+      closeDataEntryModal();
+
+      setTimeView(dim);
+      document.getElementById('periodSelect').value = period;
+      renderDashboard();
+
+      showToast(success ? `บันทึกรายการ "${name}" เรียบร้อยแล้ว` : `บันทึกในเครื่องเรียบร้อยแล้ว (ไม่พบการเชื่อมต่อ Sheet)`);
+    }
+
+    async function deleteEntry(id) {
+      if (!confirm('ท่านต้องการลบรายการนี้ใช่หรือไม่?')) return;
+
+      showToast('กำลังลบรายการจาก Google Sheet...');
+      const success = await syncToGoogleSheet('delete', { id: id });
+
+      appData = appData.filter(i => i.id !== id);
+      saveToLocalStorage();
+      renderDashboard();
+
+      showToast(success ? 'ลบรายการจาก Google Sheet เรียบร้อยแล้ว' : 'ลบรายการในเครื่องเรียบร้อยแล้ว');
+    }
+
+    function consolidateDailyToMonthly() {
+      if (systemMode === 'executive') return;
+
+      const dailyItems = appData.filter(i => i.dimension === 'daily');
+      if (dailyItems.length === 0) {
+        showToast('ไม่พบข้อมูลรายวันสำหรับการประมวลผล');
+        return;
+      }
+
+      let countUpdated = 0;
+      dailyItems.forEach(dItem => {
+        const targetMonthPeriod = 'มกราคม 2569';
+        let existingMonthItem = appData.find(m => m.dimension === 'month_end' && m.period === targetMonthPeriod && m.name === dItem.name);
+
+        if (existingMonthItem) {
+          existingMonthItem.actual = dailyItems.filter(i => i.name === dItem.name).reduce((sum, item) => sum + item.actual, 0);
+          syncToGoogleSheet('update', { item: existingMonthItem });
+          countUpdated++;
+        } else {
+          const newItem = {
+            id: 'auto_' + Date.now() + '_' + Math.random().toString(36).substr(2, 4),
+            dimension: 'month_end',
+            period: targetMonthPeriod,
+            dept: dItem.dept || 'ฝ่ายการเงิน',
+            type: dItem.type,
+            name: dItem.name + ' (คำนวณจากรายวัน)',
+            estimate: 0,
+            actual: dItem.actual
+          };
+          appData.push(newItem);
+          syncToGoogleSheet('create', { item: newItem });
+          countUpdated++;
+        }
+      });
+
+      saveToLocalStorage();
+      setTimeView('month_end');
+      showToast(`รวมยอดข้อมูลรายวันเข้าสู่รายงานสิ้นเดือนเรียบร้อยแล้ว (${countUpdated} รายการ)`);
+    }
+
+    // Google Sheets Config Modal Management
+    function openGoogleSheetModal() {
+      document.getElementById('gasUrlInput').value = gasWebUrl;
+      document.getElementById('sheetConfigModal').classList.remove('hidden');
+    }
+
+    function closeGoogleSheetModal() {
+      document.getElementById('sheetConfigModal').classList.add('hidden');
+    }
+
+    function saveGoogleSheetConfig() {
+      const url = document.getElementById('gasUrlInput').value.trim();
+      gasWebUrl = url;
+      localStorage.setItem('satun_coop_gas_url', url);
+      updateSheetStatusUI();
+      closeGoogleSheetModal();
+      
+      if (url) {
+        showToast('บันทึก URL การเชื่อมต่อ Google Sheet เรียบร้อยแล้ว');
+        loadDataFromSource();
+      } else {
+        showToast('ยกเลิกการเชื่อมต่อ Google Sheet แล้ว');
+      }
+    }
+
+    function clearGasUrl() {
+      document.getElementById('gasUrlInput').value = '';
+      saveGoogleSheetConfig();
+    }
+
+    function updateSheetStatusUI() {
+      const text = document.getElementById('sheetStatusText');
+      if (gasWebUrl) {
+        text.textContent = 'Google Sheet: เชื่อมต่อแล้ว';
+        text.className = 'text-emerald-400 font-bold';
+      } else {
+        text.textContent = 'ตั้งค่า Google Sheet';
+        text.className = 'text-slate-300';
+      }
+    }
+
+    function copyGasCode() {
+      const scriptText = document.getElementById('gasCodeScript').value;
+      const temp = document.createElement('textarea');
+      temp.value = scriptText;
+      document.body.appendChild(temp);
+      temp.select();
+      document.execCommand('copy');
+      document.body.removeChild(temp);
+      showToast('คัดลอกโค้ด Google Apps Script เรียบร้อยแล้ว');
+    }
+
+    function copyExecutiveLink() {
+      const baseUrl = window.location.href.split('?')[0];
+      const execUrl = baseUrl + '?mode=executive';
+
+      const tempInput = document.createElement('input');
+      tempInput.value = execUrl;
+      document.body.appendChild(tempInput);
+      tempInput.select();
+      document.execCommand('copy');
+      document.body.removeChild(tempInput);
+
+      document.getElementById('generatedLinkText').textContent = execUrl;
+      document.getElementById('linkBanner').classList.remove('hidden');
+      showToast('คัดลอกลิงก์สำหรับผู้บริหารเข้าคลิปบอร์ดเรียบร้อยแล้ว');
+    }
+
+    function fmt(num) {
+      return (num || 0).toLocaleString('th-TH', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    }
+
+    function fmtShort(num) {
+      if (Math.abs(num) >= 1000000) return (num / 1000000).toFixed(2) + ' ล้าน';
+      if (Math.abs(num) >= 1000) return (num / 1000).toFixed(0) + ' พัน';
+      return (num || 0).toFixed(0);
+    }
+
+    function showToast(msg) {
+      const toast = document.getElementById('toastBox');
+      document.getElementById('toastMsg').textContent = msg;
+      toast.classList.remove('hidden');
+      setTimeout(() => toast.classList.add('hidden'), 4000);
+    }
+
+    function initTheme() {
+      const saved = localStorage.getItem('theme');
+      if (saved === 'dark' || (!saved && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+        document.documentElement.classList.add('dark');
+        isDark = true;
+        document.getElementById('themeIcon').className = 'fa-solid fa-sun text-xs text-amber-300';
+      }
+    }
+
+    function toggleTheme() {
+      isDark = !isDark;
+      document.documentElement.classList.toggle('dark', isDark);
+      localStorage.setItem('theme', isDark ? 'dark' : 'light');
+      document.getElementById('themeIcon').className = isDark ? 'fa-solid fa-sun text-xs text-amber-300' : 'fa-solid fa-moon text-xs text-amber-300';
+      renderDashboard();
+    }
+
+    function exportCSV() {
+      const selectedPeriod = document.getElementById('periodSelect').value;
+      const data = appData.filter(i => i.dimension === currentTimeView && i.period === selectedPeriod);
+
+      if (data.length === 0) return;
+
+      let csv = "\uFEFFมิติเวลา,งวดการรายงาน,ฝ่ายที่รับผิดชอบ,ประเภทรายการ,ชื่อรายการ,ประมาณการ(บาท),เกิดขึ้นจริง(บาท)\n";
+      data.forEach(r => {
+        csv += `"${r.dimension}","${r.period}","${r.dept}","${r.type}","${r.name}",${r.estimate || 0},${r.actual}\n`;
+      });
+
+      const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+      const link = document.createElement('a');
+      link.href = URL.createObjectURL(blob);
+      link.download = `รายงานกระแสเงินสด_${currentTimeView}_${selectedPeriod}.csv`;
+      link.click();
+    }
+  </script>
+</body>
+</html>
