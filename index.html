@@ -19,6 +19,12 @@
   <!-- Chart.js CDN -->
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.2/dist/chart.umd.min.js"></script>
 
+  <!-- Flatpickr Thai Datepicker -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/themes/material_green.css" />
+  <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+  <script src="https://cdn.jsdelivr.net/npm/flatpickr/dist/l10n/th.js"></script>
+
   <script>
     tailwind.config = {
       darkMode: 'class',
@@ -99,6 +105,12 @@
               <span>จัดการข้อมูล</span>
             </button>
           </div>
+
+          <!-- User Manual Button -->
+          <button onclick="openManualModal()" title="คู่มือการใช้งานระบบ" class="bg-slate-800 hover:bg-slate-700 text-amber-300 border border-amber-500/30 px-3 py-1.5 rounded-xl text-xs font-semibold flex items-center gap-1.5 transition-all shadow-sm">
+            <i class="fa-solid fa-book-open text-amber-400"></i>
+            <span>คู่มือระบบ</span>
+          </button>
 
           <!-- Executive Share Link Button -->
           <button onclick="copyExecutiveLink()" title="คัดลอกลิงก์สำหรับผู้บริหารเข้าดูเท่านั้น" class="bg-indigo-700 hover:bg-indigo-600 text-white px-3 py-1.5 rounded-xl text-xs font-semibold flex items-center gap-1.5 transition-all shadow-sm">
@@ -238,7 +250,7 @@
           </div>
           <span class="text-[11px] bg-indigo-100 dark:bg-indigo-950/80 text-indigo-700 dark:text-indigo-300 font-bold px-2.5 py-1 rounded-lg" id="chart1Badge">แผนภูมิผสม</span>
         </div>
-        <div style="height: 300px; position: relative;">
+        <div style="height: 320px; position: relative;">
           <canvas id="mainComboChart"></canvas>
         </div>
       </div>
@@ -327,6 +339,135 @@
 
   </main>
 
+  <!-- ===== FOOTER WITH CREDITS ===== -->
+  <footer class="border-t border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 py-4 mt-8">
+    <div class="max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col sm:flex-row items-center justify-between gap-2 text-xs text-slate-500 dark:text-slate-400">
+      <div>
+        <p class="font-medium text-slate-700 dark:text-slate-300">
+          © สหกรณ์ออมทรัพย์สาธารณสุขสตูล จำกัด — ระบบประมาณการและติดตามกระแสเงินสด
+        </p>
+        <p class="text-[11px] text-slate-400 mt-0.5">
+          เพื่อการบริหารจัดการสภาพคล่องทางการเงินอย่างยั่งยืน
+        </p>
+      </div>
+      <div class="flex items-center gap-2 bg-slate-100 dark:bg-slate-800 px-3 py-1.5 rounded-xl border border-slate-200 dark:border-slate-700">
+        <i class="fa-solid fa-code text-emerald-600 dark:text-emerald-400"></i>
+        <span>พัฒนาระบบโดย: <strong class="text-slate-800 dark:text-slate-200">ดำรงค์ ห. เจ้าหน้าที่ธุรการ</strong></span>
+      </div>
+    </div>
+  </footer>
+
+  <!-- ===== SYSTEM MANUAL MODAL ===== -->
+  <div id="manualModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center hidden p-4">
+    <div class="bg-white dark:bg-slate-900 rounded-2xl max-w-4xl w-full border border-slate-200 dark:border-slate-800 shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
+      
+      <div class="bg-slate-800 text-white p-4 flex items-center justify-between flex-shrink-0">
+        <div class="flex items-center gap-2.5">
+          <div class="w-8 h-8 bg-amber-500/20 text-amber-300 rounded-lg flex items-center justify-center">
+            <i class="fa-solid fa-book-open"></i>
+          </div>
+          <div>
+            <h3 class="font-bold text-sm leading-tight">คู่มือการใช้งานระบบประมาณการและติดตามกระแสเงินสด</h3>
+            <p class="text-[11px] text-slate-300">สหกรณ์ออมทรัพย์สาธารณสุขสตูล จำกัด</p>
+          </div>
+        </div>
+        <button onclick="closeManualModal()" class="text-slate-400 hover:text-white"><i class="fa-solid fa-xmark text-lg"></i></button>
+      </div>
+
+      <div class="p-6 overflow-y-auto space-y-6 text-xs sm:text-sm text-slate-700 dark:text-slate-300 leading-relaxed">
+        
+        <!-- Section 1 -->
+        <section class="space-y-2 border-b border-slate-200 dark:border-slate-800 pb-4">
+          <h4 class="text-sm font-bold text-emerald-700 dark:text-emerald-400 flex items-center gap-2">
+            <i class="fa-solid fa-circle-info"></i> 1. ภาพรวมระบบและวัตถุประสงค์
+          </h4>
+          <p>
+            ระบบประมาณการและติดตามกระแสเงินสด จัดทำขึ้นเพื่อเป็นเครื่องมือกลางในการบริหารจัดการสภาพคล่องทางการเงิน ช่วยให้ฝ่ายจัดการและผู้บริหารติดตามกระแสเงินสดรับ-จ่ายจริงได้อย่างทันท่วงที โดยแบ่งโหมดการทำงานออกเป็น 2 ส่วนหลัก:
+          </p>
+          <ul class="list-disc list-inside ml-2 space-y-1 text-slate-600 dark:text-slate-400 text-xs">
+            <li><strong>โหมดผู้บริหาร (Executive View):</strong> แสดงเฉพาะสรุปตัวเลขสำคัญ (KPIs) และแผนภูมิผสม (Combo Chart) สำหรับวิเคราะห์ภาพรวม ซ่อนปุ่มแก้ไขข้อมูลทั้งหมดเพื่อความปลอดภัย</li>
+            <li><strong>โหมดจัดการข้อมูล (Management View):</strong> สำหรับเจ้าหน้าที่และผู้จัดการ บันทึก แก้ไข ลบข้อมูลรายการรับ-จ่าย และเชื่อมต่อ Google Sheets</li>
+          </ul>
+        </section>
+
+        <!-- Section 2 -->
+        <section class="space-y-2 border-b border-slate-200 dark:border-slate-800 pb-4">
+          <h4 class="text-sm font-bold text-emerald-700 dark:text-emerald-400 flex items-center gap-2">
+            <i class="fa-solid fa-clock"></i> 2. มิติเวลาและการแบ่งบทบาทหน้าที่ (3 ระดับ)
+          </h4>
+          <div class="overflow-x-auto">
+            <table class="w-full text-xs text-left border border-slate-200 dark:border-slate-800 rounded-xl">
+              <thead class="bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300">
+                <tr>
+                  <th class="p-2 border-b">มิติเวลา</th>
+                  <th class="p-2 border-b">วัตถุประสงค์</th>
+                  <th class="p-2 border-b">ผู้รับผิดชอบกรอกข้อมูล</th>
+                </tr>
+              </thead>
+              <tbody class="divide-y divide-slate-100 dark:divide-slate-800">
+                <tr>
+                  <td class="p-2 font-bold text-emerald-600">1. สิ้นเดือน</td>
+                  <td class="p-2">วิเคราะห์เป้าหมายยุทธศาสตร์ (ประมาณการ vs เกิดขึ้นจริง)</td>
+                  <td class="p-2">ฝ่ายสินเชื่อ, การเงิน, บัญชี, ธุรการพัสดุ</td>
+                </tr>
+                <tr>
+                  <td class="p-2 font-bold text-indigo-600">2. รายสัปดาห์</td>
+                  <td class="p-2">ติดตามสภาพคล่องระยะสั้นประจำสัปดาห์</td>
+                  <td class="p-2">ฝ่ายการเงิน, ผู้จัดการ</td>
+                </tr>
+                <tr>
+                  <td class="p-2 font-bold text-amber-600">3. รายวัน</td>
+                  <td class="p-2">ติดตามกระแสเงินสดสดหน้าเคาน์เตอร์การเงิน</td>
+                  <td class="p-2">ฝ่ายการเงิน, ผู้จัดการ</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </section>
+
+        <!-- Section 3 -->
+        <section class="space-y-2 border-b border-slate-200 dark:border-slate-800 pb-4">
+          <h4 class="text-sm font-bold text-emerald-700 dark:text-emerald-400 flex items-center gap-2">
+            <i class="fa-solid fa-user-tie"></i> 3. คำแนะนำสำหรับผู้บริหาร (Executive View)
+          </h4>
+          <ol class="list-decimal list-inside space-y-1.5 text-xs text-slate-600 dark:text-slate-400">
+            <li><strong>เข้าสู่โหมดผู้บริหาร:</strong> ผ่านลิงก์เฉพาะที่มีคำว่า <code class="bg-slate-100 dark:bg-slate-800 px-1 py-0.5 rounded font-mono text-indigo-600">?mode=executive</code></li>
+            <li><strong>การเลือกระดับรายงาน:</strong> กดปุ่มสลับมิติเวลา <i>สิ้นเดือน, รายสัปดาห์, หรือ รายวัน</i> ที่แถบด้านบน</li>
+            <li><strong>การอ่านแผนภูมิผสม (Combo Chart):</strong>
+              <ul class="list-disc list-inside ml-4 mt-0.5">
+                <li><strong class="text-emerald-600">กราฟแท่ง (Bar):</strong> แสดงยอดเงินสดที่ <i>เกิดขึ้นจริง (Actual)</i> (สีเขียว = รายรับ, สีแดง = รายจ่าย)</li>
+                <li><strong class="text-indigo-600">กราฟเส้น (Line):</strong> แสดงยอด <i>ประมาณการว่าจะจ่ายจริง (Estimate)</i> ที่ฝ่ายงานตั้งไว้</li>
+              </ul>
+            </li>
+          </ol>
+        </section>
+
+        <!-- Section 4 -->
+        <section class="space-y-2">
+          <h4 class="text-sm font-bold text-emerald-700 dark:text-emerald-400 flex items-center gap-2">
+            <i class="fa-solid fa-file-excel"></i> 4. การบันทึกข้อมูลและการเชื่อมต่อ Google Sheets
+          </h4>
+          <p class="text-xs">
+            เจ้าหน้าที่สามารถกดปุ่ม <strong>"บันทึกข้อมูล"</strong> เพื่อเปิดหน้าฟอร์ม เลือกลวันที่ด้วย <strong>ปฏิทิน ภาษาไทย (พ.ศ.)</strong> แล้วบันทึกรายการเข้าสู่ Google Sheet ของสหกรณ์โดยตรง
+          </p>
+          <div class="bg-amber-50 dark:bg-amber-950/40 p-3 rounded-xl border border-amber-200 dark:border-amber-800 text-amber-900 dark:text-amber-300 text-xs">
+            <strong>📌 ข้อควรระวังในการติดตั้ง Google Sheets:</strong> ในการ Deploy Apps Script ต้องตั้งค่า <i>"Who has access"</i> เป็น <strong>"Everyone (ทุกคน)"</strong> เสมอ ข้อมูลจึงจะสามารถบันทึกจากหน้าเว็บเข้าสเปรดชีตได้
+          </div>
+        </section>
+
+        <div class="bg-slate-100 dark:bg-slate-800 p-3 rounded-xl text-center text-xs text-slate-500">
+          ระบบพัฒนาร่วมและดูแลรักษาโดย: <strong>ดำรงค์ ห. เจ้าหน้าที่ธุรการ</strong> | สหกรณ์ออมทรัพย์สาธารณสุขสตูล จำกัด
+        </div>
+
+      </div>
+
+      <div class="p-4 bg-slate-50 dark:bg-slate-800/50 border-t border-slate-200 dark:border-slate-800 flex justify-end flex-shrink-0">
+        <button type="button" onclick="closeManualModal()" class="px-5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs shadow-md">เข้าใจและรับทราบ</button>
+      </div>
+
+    </div>
+  </div>
+
   <!-- ===== DATA ENTRY & EDIT MODAL (MANAGEMENT MODE ONLY) ===== -->
   <div id="entryModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center hidden p-4">
     <div class="bg-white dark:bg-slate-900 rounded-2xl max-w-lg w-full border border-slate-200 dark:border-slate-800 shadow-2xl overflow-hidden">
@@ -356,8 +497,8 @@
 
         <div class="grid grid-cols-2 gap-3">
           <div>
-            <label class="block font-semibold text-slate-700 dark:text-slate-300 mb-1">งวด/ประจำวันที่:</label>
-            <input type="text" id="modalPeriodName" required placeholder="เช่น มกราคม 2569 หรือ 15 ม.ค. 69" class="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl p-2.5 outline-none" />
+            <label class="block font-semibold text-slate-700 dark:text-slate-300 mb-1">งวด/ประจำวันที่ (ปฏิทิน พ.ศ. ภาษาไทย):</label>
+            <input type="text" id="modalPeriodDate" required placeholder="เลือกวันที่..." class="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl p-2.5 outline-none text-slate-800 dark:text-slate-100 cursor-pointer" />
           </div>
 
           <div>
@@ -448,11 +589,18 @@
         </div>
 
         <div class="bg-slate-100 dark:bg-slate-800 p-3 rounded-xl space-y-1 text-slate-600 dark:text-slate-400 text-[11px]">
-          <span class="font-bold text-slate-800 dark:text-slate-200 block">ขั้นตอนการติดตั้งใน Google Sheet (3 ขั้นตอน):</span>
-          <ol class="list-decimal list-inside space-y-1">
-            <li>เปิด Google Sheet ของท่านไปที่เมนู <strong>ส่วนขยาย (Extensions) &gt; Apps Script</strong></li>
-            <li>ลบโค้ดเดิม วางโค้ดที่คัดลอกจากช่องด้านบน แล้วกดเซฟ (Ctrl+S)</li>
-            <li>กด <strong>การทบทวน/การทำให้ใช้งานได้ (Deploy) &gt; การทำให้ใช้งานได้ใหม่ (New deployment)</strong> เลือกชนิดเป็น <i>เว็บแอป (Web App)</i> กำหนดสิทธิ์ผู้เข้าถึงเป็น <i>"ทุกคน (Anyone)"</i> แล้วคัดลอก URL มาวางในช่องด้านบน</li>
+          <span class="font-bold text-slate-800 dark:text-slate-200 block">ขั้นตอนการติดตั้งใน Google Sheet (สำคัญมาก เพื่อให้บันทึกผ่าน):</span>
+          <ol class="list-decimal list-inside space-y-1.5">
+            <li>เปิด Google Sheet ไปที่เมนู <strong>ส่วนขยาย (Extensions) &gt; Apps Script</strong></li>
+            <li>ลบโค้ดเดิม วางโค้ดใหม่ด้านบน แล้วกด <strong>บันทึก (Ctrl+S)</strong></li>
+            <li>กด <strong>การทำให้ใช้งานได้ (Deploy) &gt; การทำให้ใช้งานได้ใหม่ (New deployment)</strong></li>
+            <li>เลือกชนิดเป็น <strong>เว็บแอป (Web App)</strong> และตั้งค่าสำคัญดังนี้:
+              <ul class="list-disc list-inside ml-4 text-emerald-600 dark:text-emerald-400 font-bold">
+                <li>สิทธิ์การเข้าถึง (Who has access): เลือก "ทุกคน (Anyone)" ⚠️ (หากไม่เลือกข้อนี้ จะบันทึกไม่เข้า)</li>
+              </ul>
+            </li>
+            <li>กด Deploy อนุญาตสิทธิ์ (Authorize access) แล้วคัดลอก <strong>Web App URL (ต้องลงท้ายด้วย /exec)</strong> มาวางในช่องด้านบน</li>
+            <li><span class="text-rose-500 font-bold">กรณีแก้ไขโค้ดใน Apps Script:</span> ต้องกด <i>Deploy &gt; Manage deployments &gt; กดรูปดินสอ &gt; เลือก "เวอร์ชันใหม่ (New version)"</i> เสมอ</li>
           </ol>
         </div>
       </div>
@@ -495,34 +643,50 @@
 
     // Google Apps Script Source Template for Users
     const GAS_SCRIPT_TEMPLATE = `function doGet(e) {
-  var sheet = SpreadsheetApp.getActiveSpreadsheet().getActiveSheet();
-  var data = sheet.getDataRange().getValues();
-  if (data.length <= 1) {
-    return ContentService.createTextOutput(JSON.stringify([])).setMimeType(ContentService.MimeType.JSON);
+  try {
+    var ss = SpreadsheetApp.getActiveSpreadsheet();
+    var sheet = ss.getSheetByName('Data') || ss.getSheets()[0];
+    var data = sheet.getDataRange().getValues();
+    if (!data || data.length <= 1) {
+      return ContentService.createTextOutput(JSON.stringify([])).setMimeType(ContentService.MimeType.JSON);
+    }
+    var result = [];
+    for (var i = 1; i < data.length; i++) {
+      var row = data[i];
+      if (!row[0] && row[0] !== 0) continue;
+      result.push({
+        id: String(row[0]),
+        dimension: String(row[1] || ''),
+        period: String(row[2] || ''),
+        dept: String(row[3] || ''),
+        type: String(row[4] || ''),
+        name: String(row[5] || ''),
+        estimate: Number(row[6]) || 0,
+        actual: Number(row[7]) || 0
+      });
+    }
+    return ContentService.createTextOutput(JSON.stringify(result)).setMimeType(ContentService.MimeType.JSON);
+  } catch (err) {
+    return ContentService.createTextOutput(JSON.stringify({ status: 'error', message: err.toString() })).setMimeType(ContentService.MimeType.JSON);
   }
-  var result = [];
-  for (var i = 1; i < data.length; i++) {
-    var row = data[i];
-    if (!row[0]) continue;
-    result.push({
-      id: String(row[0]),
-      dimension: String(row[1]),
-      period: String(row[2]),
-      dept: String(row[3]),
-      type: String(row[4]),
-      name: String(row[5]),
-      estimate: Number(row[6]) || 0,
-      actual: Number(row[7]) || 0
-    });
-  }
-  return ContentService.createTextOutput(JSON.stringify(result)).setMimeType(ContentService.MimeType.JSON);
 }
 
 function doPost(e) {
   var lock = LockService.getScriptLock();
-  lock.tryLock(10000);
   try {
-    var sheet = SpreadsheetApp.getActiveSpreadsheet().getActiveSheet();
+    lock.waitLock(10000);
+  } catch (lErr) {
+    return ContentService.createTextOutput(JSON.stringify({ status: 'error', message: 'Lock timeout' })).setMimeType(ContentService.MimeType.JSON);
+  }
+
+  try {
+    var ss = SpreadsheetApp.getActiveSpreadsheet();
+    var sheet = ss.getSheetByName('Data') || ss.getSheets()[0];
+    
+    if (!e || !e.postData || !e.postData.contents) {
+      return ContentService.createTextOutput(JSON.stringify({ status: 'error', message: 'No post data' })).setMimeType(ContentService.MimeType.JSON);
+    }
+
     var payload = JSON.parse(e.postData.contents);
     var action = payload.action;
     var item = payload.item;
@@ -535,11 +699,16 @@ function doPost(e) {
       sheet.appendRow([item.id, item.dimension, item.period, item.dept, item.type, item.name, item.estimate, item.actual]);
     } else if (action === 'update') {
       var data = sheet.getDataRange().getValues();
+      var found = false;
       for (var i = 1; i < data.length; i++) {
         if (String(data[i][0]) === String(item.id)) {
           sheet.getRange(i + 1, 1, 1, 8).setValues([[item.id, item.dimension, item.period, item.dept, item.type, item.name, item.estimate, item.actual]]);
+          found = true;
           break;
         }
+      }
+      if (!found && item) {
+        sheet.appendRow([item.id, item.dimension, item.period, item.dept, item.type, item.name, item.estimate, item.actual]);
       }
     } else if (action === 'delete') {
       var data = sheet.getDataRange().getValues();
@@ -566,12 +735,65 @@ function doPost(e) {
     let deptChartInstance = null;
     let isDark = false;
     let gasWebUrl = localStorage.getItem('satun_coop_gas_url') || '';
+    let datePickerInstance = null;
+
+    // Thai Date Helper Constants & Functions
+    const THAI_MONTHS_FULL = ['มกราคม', 'กุมภาพันธ์', 'มีนาคม', 'เมษายน', 'พฤษภาคม', 'มิถุนายน', 'กรกฎาคม', 'สิงหาคม', 'กันยายน', 'ตุลาคม', 'พฤศจิกายน', 'ธันวาคม'];
+    const THAI_MONTHS_SHORT = ['ม.ค.', 'ก.พ.', 'มี.ค.', 'เม.ย.', 'พ.ค.', 'มิ.ย.', 'ก.ค.', 'ส.ค.', 'ก.ย.', 'ต.ค.', 'พ.ย.', 'ธ.ค.'];
+
+    function formatIsoToThaiPeriod(isoDateStr, dimension) {
+      if (!isoDateStr) return '';
+      const parts = isoDateStr.split('-');
+      if (parts.length !== 3) return isoDateStr;
+
+      const yearAD = parseInt(parts[0], 10);
+      const monthIdx = parseInt(parts[1], 10) - 1;
+      const dayNum = parseInt(parts[2], 10);
+      const yearBE = yearAD + 543;
+
+      if (dimension === 'month_end') {
+        return `${THAI_MONTHS_FULL[monthIdx]} ${yearBE}`;
+      } else {
+        return `${dayNum} ${THAI_MONTHS_SHORT[monthIdx]} ${yearBE}`;
+      }
+    }
+
+    function parseThaiPeriodToIso(periodStr) {
+      if (!periodStr) return new Date().toISOString().split('T')[0];
+      if (/^\d{4}-\d{2}-\d{2}$/.test(periodStr)) return periodStr;
+
+      let yearAD = new Date().getFullYear();
+      const yearMatch = periodStr.match(/\b(25\d{2}|20\d{2})\b/);
+      if (yearMatch) {
+        const yVal = parseInt(yearMatch[1], 10);
+        yearAD = yVal > 2500 ? yVal - 543 : yVal;
+      }
+
+      let monthIdx = 0;
+      for (let i = 0; i < 12; i++) {
+        if (periodStr.includes(THAI_MONTHS_FULL[i]) || periodStr.includes(THAI_MONTHS_SHORT[i])) {
+          monthIdx = i;
+          break;
+        }
+      }
+
+      let dayNum = 1;
+      const dayMatch = periodStr.match(/\b([1-9]|[12]\d|3[01])\b/);
+      if (dayMatch && !periodStr.startsWith('25') && !periodStr.startsWith('20')) {
+        dayNum = parseInt(dayMatch[1], 10);
+      }
+
+      const mm = String(monthIdx + 1).padStart(2, '0');
+      const dd = String(dayNum).padStart(2, '0');
+      return `${yearAD}-${mm}-${dd}`;
+    }
 
     // Initialization
     window.addEventListener('DOMContentLoaded', () => {
       initTheme();
       document.getElementById('gasCodeScript').value = GAS_SCRIPT_TEMPLATE;
       updateSheetStatusUI();
+      initThaiDatePicker();
 
       // Check URL Query Parameter
       const urlParams = new URLSearchParams(window.location.search);
@@ -585,6 +807,33 @@ function doPost(e) {
 
       loadDataFromSource();
     });
+
+    function initThaiDatePicker() {
+      if (typeof flatpickr !== 'undefined') {
+        datePickerInstance = flatpickr("#modalPeriodDate", {
+          locale: "th",
+          dateFormat: "Y-m-d",
+          altInput: true,
+          altFormat: "j F Y",
+          altInputClass: "w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl p-2.5 outline-none text-slate-800 dark:text-slate-100 cursor-pointer font-medium",
+          onReady: function(selectedDates, dateStr, instance) {
+            formatThaiBE(instance);
+          },
+          onChange: function(selectedDates, dateStr, instance) {
+            formatThaiBE(instance);
+          }
+        });
+      }
+    }
+
+    function formatThaiBE(instance) {
+      if (!instance || !instance.selectedDates[0] || !instance.altInput) return;
+      const d = instance.selectedDates[0];
+      const day = d.getDate();
+      const monthThai = THAI_MONTHS_FULL[d.getMonth()];
+      const yearBE = d.getFullYear() + 543;
+      instance.altInput.value = `${day} ${monthThai} ${yearBE}`;
+    }
 
     async function loadDataFromSource() {
       if (gasWebUrl) {
@@ -635,10 +884,24 @@ function doPost(e) {
           headers: { 'Content-Type': 'text/plain;charset=utf-8' },
           body: JSON.stringify({ action: action, ...payload })
         });
+
+        if (!res.ok) {
+          console.error('HTTP Error:', res.status, res.statusText);
+          showToast(`เกิดข้อผิดพลาด HTTP ${res.status} ในการเชื่อมต่อ Google Sheet`);
+          return false;
+        }
+
         const json = await res.json();
-        return json.status === 'success';
+        if (json.status === 'success') {
+          return true;
+        } else {
+          console.error('GAS Error Message:', json.message);
+          showToast('Google Sheet ตอบกลับข้อผิดพลาด: ' + (json.message || 'ไม่ทราบสาเหตุ'));
+          return false;
+        }
       } catch (err) {
         console.error('Google Sheet Sync Error:', err);
+        showToast('ไม่สามารถส่งข้อมูลไป Google Sheet ได้: ' + err.message);
         return false;
       }
     }
@@ -1034,6 +1297,15 @@ function doPost(e) {
       }).join('');
     }
 
+    // Manual Modal Helper
+    function openManualModal() {
+      document.getElementById('manualModal').classList.remove('hidden');
+    }
+
+    function closeManualModal() {
+      document.getElementById('manualModal').classList.add('hidden');
+    }
+
     // Form & Entry Management
     function openDataEntryModal(editId = null) {
       if (systemMode === 'executive') return;
@@ -1052,7 +1324,13 @@ function doPost(e) {
         btnText.textContent = 'อัปเดตรายการ';
 
         document.getElementById('modalTimeDimension').value = item.dimension;
-        document.getElementById('modalPeriodName').value = item.period;
+        const targetIso = parseThaiPeriodToIso(item.period);
+        if (datePickerInstance) {
+          datePickerInstance.setDate(targetIso, true);
+        } else {
+          document.getElementById('modalPeriodDate').value = targetIso;
+        }
+
         document.getElementById('modalDept').value = item.dept;
         document.getElementById('modalType').value = item.type;
         document.getElementById('modalItemName').value = item.name;
@@ -1065,6 +1343,13 @@ function doPost(e) {
 
         document.getElementById('cashflowForm').reset();
         document.getElementById('modalTimeDimension').value = currentTimeView;
+        
+        const todayIso = new Date().toISOString().split('T')[0];
+        if (datePickerInstance) {
+          datePickerInstance.setDate(todayIso, true);
+        } else {
+          document.getElementById('modalPeriodDate').value = todayIso;
+        }
       }
 
       updateFormFieldsByDimension();
@@ -1100,7 +1385,8 @@ function doPost(e) {
 
       const editingId = document.getElementById('modalEditingId').value;
       const dim = document.getElementById('modalTimeDimension').value;
-      const period = document.getElementById('modalPeriodName').value.trim();
+      const isoDate = document.getElementById('modalPeriodDate').value;
+      const period = formatIsoToThaiPeriod(isoDate, dim);
       const dept = document.getElementById('modalDept').value;
       const type = document.getElementById('modalType').value;
       const name = document.getElementById('modalItemName').value.trim();
