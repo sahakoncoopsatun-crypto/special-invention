@@ -106,7 +106,7 @@
             </button>
           </div>
 
-          <!-- Executive Locked Badge (Displayed when accessing via Executive Link) -->
+          <!-- Executive Locked Badge -->
           <div id="execLockedBadge" class="hidden bg-indigo-900/80 text-indigo-200 border border-indigo-500/40 px-3 py-1.5 rounded-xl font-semibold flex items-center gap-1.5 text-xs shadow-sm">
             <i class="fa-solid fa-user-tie text-indigo-300"></i>
             <span>โหมดผู้บริหาร (อ่านอย่างเดียว)</span>
@@ -180,7 +180,7 @@
       </div>
     </div>
 
-    <!-- Data Dimension Clarification Explainer Banner -->
+    <!-- Data Dimension Explainer Banner -->
     <div class="bg-emerald-900/10 dark:bg-emerald-950/40 border border-emerald-500/20 rounded-2xl p-3.5 text-xs text-slate-700 dark:text-slate-300 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
       <div class="flex items-start gap-2.5">
         <div class="w-7 h-7 bg-emerald-600 text-white rounded-lg flex items-center justify-center flex-shrink-0 mt-0.5">
@@ -244,7 +244,7 @@
     <!-- Executive Visual Analytics Section (Charts) -->
     <div class="grid grid-cols-1 lg:grid-cols-5 gap-4">
       
-      <!-- Chart 1: Combo Chart (Bar + Line) for Month-End or Daily/Weekly Trend -->
+      <!-- Chart 1: Combo Chart (Bar + Line) -->
       <div id="comboChartCard" class="lg:col-span-3 bg-white dark:bg-slate-900 p-4 sm:p-5 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm space-y-3">
         <div class="flex items-center justify-between">
           <div>
@@ -261,7 +261,7 @@
         </div>
       </div>
 
-      <!-- Chart 2: Cash Flow Distribution by Responsible Department -->
+      <!-- Chart 2: Cash Flow Distribution by Department -->
       <div id="deptChartCard" class="lg:col-span-2 bg-white dark:bg-slate-900 p-4 sm:p-5 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm space-y-3">
         <div>
           <h3 class="font-bold text-slate-800 dark:text-slate-100 text-sm sm:text-base flex items-center gap-2">
@@ -451,10 +451,10 @@
         <!-- Section 4 -->
         <section class="space-y-2">
           <h4 class="text-sm font-bold text-emerald-700 dark:text-emerald-400 flex items-center gap-2">
-            <i class="fa-solid fa-file-excel"></i> 4. การบันทึกข้อมูลและการเชื่อมต่อ Google Sheets
+            <i class="fa-solid fa-file-excel"></i> 4. การบันทึกข้อมูลและการเลือกช่วงเวลาด้วยปฏิทิน ภาษาไทย
           </h4>
           <p class="text-xs">
-            เจ้าหน้าที่สามารถกดปุ่ม <strong>"บันทึกข้อมูล"</strong> เพื่อเปิดหน้าฟอร์ม เลือกลวันที่ด้วย <strong>ปฏิทิน ภาษาไทย (พ.ศ.)</strong> แล้วบันทึกรายการเข้าสู่ Google Sheet ของสหกรณ์โดยตรง
+            เจ้าหน้าที่สามารถกดปุ่ม <strong>"บันทึกข้อมูล"</strong> เพื่อเปิดหน้าฟอร์ม เลือกลวันที่หรือช่วงเวลาของวันที่ด้วย <strong>ปฏิทิน ภาษาไทย (พ.ศ.)</strong> เช่น <i>"วันที่ 31 กรกฎาคม 2569 ถึง 3 สิงหาคม 2569"</i> แล้วบันทึกรายการเข้าสู่ Google Sheet ของสหกรณ์โดยตรง
           </p>
           <div class="bg-amber-50 dark:bg-amber-950/40 p-3 rounded-xl border border-amber-200 dark:border-amber-800 text-amber-900 dark:text-amber-300 text-xs">
             <strong>📌 ข้อควรระวังในการติดตั้ง Google Sheets:</strong> ในการ Deploy Apps Script ต้องตั้งค่า <i>"Who has access"</i> เป็น <strong>"Everyone (ทุกคน)"</strong> เสมอ ข้อมูลจึงจะสามารถบันทึกจากหน้าเว็บเข้าสเปรดชีตได้
@@ -503,8 +503,8 @@
 
         <div class="grid grid-cols-2 gap-3">
           <div>
-            <label class="block font-semibold text-slate-700 dark:text-slate-300 mb-1">งวด/ประจำวันที่ (ปฏิทิน พ.ศ. ภาษาไทย):</label>
-            <input type="text" id="modalPeriodDate" required placeholder="เลือกวันที่..." class="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl p-2.5 outline-none text-slate-800 dark:text-slate-100 cursor-pointer" />
+            <label class="block font-semibold text-slate-700 dark:text-slate-300 mb-1">งวด/ประจำวันที่ (ระบุเป็นวัน หรือ ช่วงเวลา):</label>
+            <input type="text" id="modalPeriodDate" required placeholder="เลือกวัน หรือ ช่วงเวลา..." class="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl p-2.5 outline-none text-slate-800 dark:text-slate-100 cursor-pointer font-medium text-xs" />
           </div>
 
           <div>
@@ -624,30 +624,29 @@
 
   <!-- ===== JAVASCRIPT LOGIC ===== -->
   <script>
-    // Sample Initial Dataset
+    // Initial Dataset
     const INITIAL_DATA = [
-      { id: 'm1', dimension: 'month_end', period: 'มกราคม 2569', dept: 'ฝ่ายสินเชื่อ', type: 'รายการจ่าย', name: 'จ่ายเงินกู้สามัญแก่สมาชิก', estimate: 12000000, actual: 11500000 },
-      { id: 'm2', dimension: 'month_end', period: 'มกราคม 2569', dept: 'ฝ่ายสินเชื่อ', type: 'รายการจ่าย', name: 'จ่ายเงินกู้เพื่อเหตุฉุกเฉิน', estimate: 2500000, actual: 2800000 },
-      { id: 'm3', dimension: 'month_end', period: 'มกราคม 2569', dept: 'ฝ่ายสินเชื่อ', type: 'รายการรับ', name: 'รับชำระหนี้เงินกู้สามัญและฉุกเฉิน', estimate: 9500000, actual: 9800000 },
+      { id: 'm1', dimension: 'month_end', period: 'กรกฎาคม 2569', dept: 'ฝ่ายสินเชื่อ', type: 'รายการจ่าย', name: 'จ่ายเงินกู้สามัญแก่สมาชิก', estimate: 12000000, actual: 11500000 },
+      { id: 'm2', dimension: 'month_end', period: 'กรกฎาคม 2569', dept: 'ฝ่ายสินเชื่อ', type: 'รายการจ่าย', name: 'จ่ายเงินกู้เพื่อเหตุฉุกเฉิน', estimate: 2500000, actual: 2800000 },
+      { id: 'm3', dimension: 'month_end', period: 'กรกฎาคม 2569', dept: 'ฝ่ายสินเชื่อ', type: 'รายการรับ', name: 'รับชำระหนี้เงินกู้สามัญและฉุกเฉิน', estimate: 9500000, actual: 9800000 },
       
-      { id: 'm4', dimension: 'month_end', period: 'มกราคม 2569', dept: 'ฝ่ายการเงิน', type: 'รายการรับ', name: 'รับฝากเงินออมทรัพย์และประจำ', estimate: 4000000, actual: 3800000 },
-      { id: 'm5', dimension: 'month_end', period: 'มกราคม 2569', dept: 'ฝ่ายการเงิน', type: 'รายการจ่าย', name: 'จ่ายถอนเงินฝากสมาชิก', estimate: 3500000, actual: 4100000 },
-      { id: 'm6', dimension: 'month_end', period: 'มกราคม 2569', dept: 'ฝ่ายการเงิน', type: 'รายการรับ', name: 'รับค่าหุ้นรายเดือน', estimate: 3200000, actual: 3200000 },
+      { id: 'm4', dimension: 'month_end', period: 'กรกฎาคม 2569', dept: 'ฝ่ายการเงิน', type: 'รายการรับ', name: 'รับฝากเงินออมทรัพย์และประจำ', estimate: 4000000, actual: 3800000 },
+      { id: 'm5', dimension: 'month_end', period: 'กรกฎาคม 2569', dept: 'ฝ่ายการเงิน', type: 'รายการจ่าย', name: 'จ่ายถอนเงินฝากสมาชิก', estimate: 3500000, actual: 4100000 },
+      { id: 'm6', dimension: 'month_end', period: 'กรกฎาคม 2569', dept: 'ฝ่ายการเงิน', type: 'รายการรับ', name: 'รับค่าหุ้นรายเดือน', estimate: 3200000, actual: 3200000 },
 
-      { id: 'm7', dimension: 'month_end', period: 'มกราคม 2569', dept: 'ฝ่ายบัญชี', type: 'รายการจ่าย', name: 'จ่ายดอกเบี้ยเงินฝากสมาชิก', estimate: 1800000, actual: 1750000 },
-      { id: 'm8', dimension: 'month_end', period: 'มกราคม 2569', dept: 'ฝ่ายบัญชี', type: 'รายการจ่าย', name: 'ค่าใช้จ่ายบริหารงานและเงินเดือนเจ้าหน้าที่', estimate: 850000, actual: 820000 },
+      { id: 'm7', dimension: 'month_end', period: 'กรกฎาคม 2569', dept: 'ฝ่ายบัญชี', type: 'รายการจ่าย', name: 'จ่ายดอกเบี้ยเงินฝากสมาชิก', estimate: 1800000, actual: 1750000 },
+      { id: 'm8', dimension: 'month_end', period: 'กรกฎาคม 2569', dept: 'ฝ่ายบัญชี', type: 'รายการจ่าย', name: 'ค่าใช้จ่ายบริหารงานและเงินเดือนเจ้าหน้าที่', estimate: 850000, actual: 820000 },
 
-      { id: 'm9', dimension: 'month_end', period: 'มกราคม 2569', dept: 'ฝ่ายธุรการพัสดุ', type: 'รายการจ่าย', name: 'จ่ายสวัสดิการสมาชิกและสงเคราะห์ศพ', estimate: 1200000, actual: 1050000 },
-      { id: 'm10', dimension: 'month_end', period: 'มกราคม 2569', dept: 'ฝ่ายธุรการพัสดุ', type: 'รายการจ่าย', name: 'ค่าวัสดุอุปกรณ์สำนักงานและครุภัณฑ์', estimate: 250000, actual: 210000 },
+      { id: 'm9', dimension: 'month_end', period: 'กรกฎาคม 2569', dept: 'ฝ่ายธุรการพัสดุ', type: 'รายการจ่าย', name: 'จ่ายสวัสดิการสมาชิกและสงเคราะห์ศพ', estimate: 1200000, actual: 1050000 },
+      { id: 'm10', dimension: 'month_end', period: 'กรกฎาคม 2569', dept: 'ฝ่ายธุรการพัสดุ', type: 'รายการจ่าย', name: 'ค่าวัสดุอุปกรณ์สำนักงานและครุภัณฑ์', estimate: 250000, actual: 210000 },
 
-      { id: 'w1', dimension: 'weekly', period: 'สัปดาห์ที่ 1 (1-7 ม.ค.)', dept: 'ฝ่ายการเงิน', type: 'รายการรับ', name: 'รับชำระหนี้ผ่านระบบหักบัญชีเงินเดือน', estimate: 0, actual: 4200000 },
-      { id: 'w2', dimension: 'weekly', period: 'สัปดาห์ที่ 1 (1-7 ม.ค.)', dept: 'ฝ่ายการเงิน', type: 'รายการจ่าย', name: 'จ่ายเงินกู้ฉุกเฉินประจำสัปดาห์', estimate: 0, actual: 1100000 },
+      { id: 'w1', dimension: 'weekly', period: 'สัปดาห์ที่ 1 (1-7 ก.ค.)', dept: 'ฝ่ายการเงิน', type: 'รายการรับ', name: 'รับชำระหนี้ผ่านระบบหักบัญชีเงินเดือน', estimate: 0, actual: 4200000 },
+      { id: 'w2', dimension: 'weekly', period: 'สัปดาห์ที่ 1 (1-7 ก.ค.)', dept: 'ฝ่ายการเงิน', type: 'รายการจ่าย', name: 'จ่ายเงินกู้ฉุกเฉินประจำสัปดาห์', estimate: 0, actual: 1100000 },
 
-      { id: 'd1', dimension: 'daily', period: '28 ม.ค. 2569', dept: 'ฝ่ายการเงิน', type: 'รายการรับ', name: 'รับเงินสดเคาน์เตอร์การเงินประจำวัน', estimate: 0, actual: 350000 },
-      { id: 'd2', dimension: 'daily', period: '28 ม.ค. 2569', dept: 'ฝ่ายการเงิน', type: 'รายการจ่าย', name: 'จ่ายกู้ฉุกเฉินผ่านเคาน์เตอร์การเงิน', estimate: 0, actual: 210000 }
+      { id: 'd1', dimension: 'daily', period: 'วันที่ 31 กรกฎาคม 2569 ถึง 3 สิงหาคม 2569', dept: 'ฝ่ายการเงิน', type: 'รายการจ่าย', name: 'จ่ายเงินกู้แก่สมาชิก', estimate: 0, actual: 2000000 }
     ];
 
-    // Google Apps Script Source Template for Users
+    // Google Apps Script Code Template
     const GAS_SCRIPT_TEMPLATE = `function doGet(e) {
   try {
     var ss = SpreadsheetApp.getActiveSpreadsheet();
@@ -736,7 +735,7 @@ function doPost(e) {
     // Application Global State
     let appData = [];
     let systemMode = 'executive'; 
-    let isExecutiveLocked = false; // Lock flag when accessed via Executive Link
+    let isExecutiveLocked = false; 
     let currentTimeView = 'month_end'; 
     let mainChartInstance = null;
     let deptChartInstance = null;
@@ -744,55 +743,75 @@ function doPost(e) {
     let gasWebUrl = localStorage.getItem('satun_coop_gas_url') || '';
     let datePickerInstance = null;
 
-    // Thai Date Helper Constants & Functions
+    // Thai Month Names
     const THAI_MONTHS_FULL = ['มกราคม', 'กุมภาพันธ์', 'มีนาคม', 'เมษายน', 'พฤษภาคม', 'มิถุนายน', 'กรกฎาคม', 'สิงหาคม', 'กันยายน', 'ตุลาคม', 'พฤศจิกายน', 'ธันวาคม'];
     const THAI_MONTHS_SHORT = ['ม.ค.', 'ก.พ.', 'มี.ค.', 'เม.ย.', 'พ.ค.', 'มิ.ย.', 'ก.ค.', 'ส.ค.', 'ก.ย.', 'ต.ค.', 'พ.ย.', 'ธ.ค.'];
 
-    function formatIsoToThaiPeriod(isoDateStr, dimension) {
+    function formatIsoToThaiPeriod(isoDateStr) {
       if (!isoDateStr) return '';
-      const parts = isoDateStr.split('-');
-      if (parts.length !== 3) return isoDateStr;
+      if (isoDateStr.includes(' to ')) {
+        const parts = isoDateStr.split(' to ');
+        const p1 = formatSingleIsoToThai(parts[0]);
+        const p2 = formatSingleIsoToThai(parts[1]);
+        return `วันที่ ${p1} ถึง ${p2}`;
+      } else {
+        return formatSingleIsoToThai(isoDateStr);
+      }
+    }
+
+    function formatSingleIsoToThai(isoStr) {
+      const parts = isoStr.split('-');
+      if (parts.length !== 3) return isoStr;
 
       const yearAD = parseInt(parts[0], 10);
       const monthIdx = parseInt(parts[1], 10) - 1;
       const dayNum = parseInt(parts[2], 10);
       const yearBE = yearAD + 543;
 
-      if (dimension === 'month_end') {
-        return `${THAI_MONTHS_FULL[monthIdx]} ${yearBE}`;
-      } else {
-        return `${dayNum} ${THAI_MONTHS_SHORT[monthIdx]} ${yearBE}`;
-      }
+      return `${dayNum} ${THAI_MONTHS_FULL[monthIdx]} ${yearBE}`;
     }
 
-    function parseThaiPeriodToIso(periodStr) {
-      if (!periodStr) return new Date().toISOString().split('T')[0];
-      if (/^\d{4}-\d{2}-\d{2}$/.test(periodStr)) return periodStr;
+    function parseSingleThaiDateToIso(str) {
+      if (!str) return new Date().toISOString().split('T')[0];
+      const trimmed = str.trim();
+      if (/^\d{4}-\d{2}-\d{2}$/.test(trimmed)) return trimmed;
 
       let yearAD = new Date().getFullYear();
-      const yearMatch = periodStr.match(/\b(25\d{2}|20\d{2})\b/);
+      const yearMatch = trimmed.match(/\b(25\d{2}|20\d{2})\b/);
       if (yearMatch) {
         const yVal = parseInt(yearMatch[1], 10);
         yearAD = yVal > 2500 ? yVal - 543 : yVal;
       }
 
-      let monthIdx = 0;
+      let monthIdx = new Date().getMonth();
       for (let i = 0; i < 12; i++) {
-        if (periodStr.includes(THAI_MONTHS_FULL[i]) || periodStr.includes(THAI_MONTHS_SHORT[i])) {
+        if (trimmed.includes(THAI_MONTHS_FULL[i]) || trimmed.includes(THAI_MONTHS_SHORT[i])) {
           monthIdx = i;
           break;
         }
       }
 
+      const withoutYearStr = trimmed.replace(/\b(25\d{2}|20\d{2})\b/g, '').replace(/วันที่|ถึง/g, '').trim();
+      const dayMatch = withoutYearStr.match(/\b([1-9]|[12]\d|3[01])\b/);
       let dayNum = 1;
-      const dayMatch = periodStr.match(/\b([1-9]|[12]\d|3[01])\b/);
-      if (dayMatch && !periodStr.startsWith('25') && !periodStr.startsWith('20')) {
+      if (dayMatch) {
         dayNum = parseInt(dayMatch[1], 10);
       }
 
       const mm = String(monthIdx + 1).padStart(2, '0');
       const dd = String(dayNum).padStart(2, '0');
       return `${yearAD}-${mm}-${dd}`;
+    }
+
+    function parseThaiPeriodToIsoArray(periodStr) {
+      if (!periodStr) return [new Date().toISOString().split('T')[0]];
+      
+      if (periodStr.includes('ถึง')) {
+        const parts = periodStr.split('ถึง');
+        return [parseSingleThaiDateToIso(parts[0]), parseSingleThaiDateToIso(parts[1])];
+      } else {
+        return [parseSingleThaiDateToIso(periodStr)];
+      }
     }
 
     // Initialization
@@ -822,10 +841,11 @@ function doPost(e) {
       if (typeof flatpickr !== 'undefined') {
         datePickerInstance = flatpickr("#modalPeriodDate", {
           locale: "th",
+          mode: "range",
           dateFormat: "Y-m-d",
           altInput: true,
           altFormat: "j F Y",
-          altInputClass: "w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl p-2.5 outline-none text-slate-800 dark:text-slate-100 cursor-pointer font-medium",
+          altInputClass: "w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl p-2.5 outline-none text-slate-800 dark:text-slate-100 cursor-pointer font-medium text-xs",
           onReady: function(selectedDates, dateStr, instance) {
             formatThaiBE(instance);
           },
@@ -837,12 +857,27 @@ function doPost(e) {
     }
 
     function formatThaiBE(instance) {
-      if (!instance || !instance.selectedDates[0] || !instance.altInput) return;
-      const d = instance.selectedDates[0];
-      const day = d.getDate();
-      const monthThai = THAI_MONTHS_FULL[d.getMonth()];
-      const yearBE = d.getFullYear() + 543;
-      instance.altInput.value = `${day} ${monthThai} ${yearBE}`;
+      if (!instance || !instance.selectedDates || instance.selectedDates.length === 0 || !instance.altInput) return;
+      if (instance.selectedDates.length === 1) {
+        const d = instance.selectedDates[0];
+        const day = d.getDate();
+        const monthThai = THAI_MONTHS_FULL[d.getMonth()];
+        const yearBE = d.getFullYear() + 543;
+        instance.altInput.value = `${day} ${monthThai} ${yearBE}`;
+      } else if (instance.selectedDates.length === 2) {
+        const d1 = instance.selectedDates[0];
+        const d2 = instance.selectedDates[1];
+        
+        const day1 = d1.getDate();
+        const monthThai1 = THAI_MONTHS_FULL[d1.getMonth()];
+        const yearBE1 = d1.getFullYear() + 543;
+
+        const day2 = d2.getDate();
+        const monthThai2 = THAI_MONTHS_FULL[d2.getMonth()];
+        const yearBE2 = d2.getFullYear() + 543;
+
+        instance.altInput.value = `วันที่ ${day1} ${monthThai1} ${yearBE1} ถึง ${day2} ${monthThai2} ${yearBE2}`;
+      }
     }
 
     async function loadDataFromSource() {
@@ -884,9 +919,8 @@ function doPost(e) {
       localStorage.setItem('satun_coop_cashflow_data_v4', JSON.stringify(appData));
     }
 
-    // Google Sheets HTTP Sync Helper
     async function syncToGoogleSheet(action, payload) {
-      if (!gasWebUrl) return true; // Local mode
+      if (!gasWebUrl) return true; 
 
       try {
         const res = await fetch(gasWebUrl, {
@@ -896,7 +930,6 @@ function doPost(e) {
         });
 
         if (!res.ok) {
-          console.error('HTTP Error:', res.status, res.statusText);
           showToast(`เกิดข้อผิดพลาด HTTP ${res.status} ในการเชื่อมต่อ Google Sheet`);
           return false;
         }
@@ -905,19 +938,16 @@ function doPost(e) {
         if (json.status === 'success') {
           return true;
         } else {
-          console.error('GAS Error Message:', json.message);
           showToast('Google Sheet ตอบกลับข้อผิดพลาด: ' + (json.message || 'ไม่ทราบสาเหตุ'));
           return false;
         }
       } catch (err) {
-        console.error('Google Sheet Sync Error:', err);
         showToast('ไม่สามารถส่งข้อมูลไป Google Sheet ได้: ' + err.message);
         return false;
       }
     }
 
     function setSystemMode(mode) {
-      // Guardrail: Block switching to management if accessed via Executive Link
       if (isExecutiveLocked && mode === 'management') {
         showToast('ลิงก์นี้สำหรับผู้บริหารเข้าดูเท่านั้น ไม่สามารถสลับไปโหมดจัดการข้อมูลได้');
         return;
@@ -936,7 +966,6 @@ function doPost(e) {
       const deptChartCard = document.getElementById('deptChartCard');
       const tableSectionCard = document.getElementById('tableSectionCard');
 
-      // Control Mode Switcher UI visibility based on Executive Lock state
       if (isExecutiveLocked) {
         if (modeSwitcherContainer) modeSwitcherContainer.style.display = 'none';
         if (execLockedBadge) execLockedBadge.classList.remove('hidden');
@@ -1353,11 +1382,11 @@ function doPost(e) {
         btnText.textContent = 'อัปเดตรายการ';
 
         document.getElementById('modalTimeDimension').value = item.dimension;
-        const targetIso = parseThaiPeriodToIso(item.period);
+        const targetIsoArray = parseThaiPeriodToIsoArray(item.period);
         if (datePickerInstance) {
-          datePickerInstance.setDate(targetIso, true);
+          datePickerInstance.setDate(targetIsoArray, true);
         } else {
-          document.getElementById('modalPeriodDate').value = targetIso;
+          document.getElementById('modalPeriodDate').value = targetIsoArray.join(' to ');
         }
 
         document.getElementById('modalDept').value = item.dept;
@@ -1375,7 +1404,7 @@ function doPost(e) {
         
         const todayIso = new Date().toISOString().split('T')[0];
         if (datePickerInstance) {
-          datePickerInstance.setDate(todayIso, true);
+          datePickerInstance.setDate([todayIso], true);
         } else {
           document.getElementById('modalPeriodDate').value = todayIso;
         }
@@ -1415,7 +1444,7 @@ function doPost(e) {
       const editingId = document.getElementById('modalEditingId').value;
       const dim = document.getElementById('modalTimeDimension').value;
       const isoDate = document.getElementById('modalPeriodDate').value;
-      const period = formatIsoToThaiPeriod(isoDate, dim);
+      const period = formatIsoToThaiPeriod(isoDate);
       const dept = document.getElementById('modalDept').value;
       const type = document.getElementById('modalType').value;
       const name = document.getElementById('modalItemName').value.trim();
@@ -1480,7 +1509,7 @@ function doPost(e) {
 
       let countUpdated = 0;
       dailyItems.forEach(dItem => {
-        const targetMonthPeriod = 'มกราคม 2569';
+        const targetMonthPeriod = 'กรกฎาคม 2569';
         let existingMonthItem = appData.find(m => m.dimension === 'month_end' && m.period === targetMonthPeriod && m.name === dItem.name);
 
         if (existingMonthItem) {
