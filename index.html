@@ -94,8 +94,8 @@
         <!-- System Mode Switcher & Tools -->
         <div class="flex flex-wrap items-center gap-2 no-print">
           
-          <!-- Mode Selector Buttons -->
-          <div class="flex items-center bg-slate-800/90 rounded-xl p-1 border border-slate-700 text-xs">
+          <!-- Mode Selector Buttons (Hidden when locked in Executive Mode via Executive Link) -->
+          <div id="modeSwitcherContainer" class="flex items-center bg-slate-800/90 rounded-xl p-1 border border-slate-700 text-xs">
             <button onclick="setSystemMode('executive')" id="btnModeExec" class="px-3 py-1.5 rounded-lg font-semibold transition-all flex items-center gap-1.5 text-slate-300">
               <i class="fa-solid fa-chart-pie"></i>
               <span>มุมมองผู้บริหาร</span>
@@ -104,6 +104,12 @@
               <i class="fa-solid fa-list-check"></i>
               <span>จัดการข้อมูล</span>
             </button>
+          </div>
+
+          <!-- Executive Locked Badge (Displayed when accessing via Executive Link) -->
+          <div id="execLockedBadge" class="hidden bg-indigo-900/80 text-indigo-200 border border-indigo-500/40 px-3 py-1.5 rounded-xl font-semibold flex items-center gap-1.5 text-xs shadow-sm">
+            <i class="fa-solid fa-user-tie text-indigo-300"></i>
+            <span>โหมดผู้บริหาร (อ่านอย่างเดียว)</span>
           </div>
 
           <!-- User Manual Button -->
@@ -730,6 +736,7 @@ function doPost(e) {
     // Application Global State
     let appData = [];
     let systemMode = 'executive'; 
+    let isExecutiveLocked = false; // Lock flag when accessed via Executive Link
     let currentTimeView = 'month_end'; 
     let mainChartInstance = null;
     let deptChartInstance = null;
@@ -795,13 +802,16 @@ function doPost(e) {
       updateSheetStatusUI();
       initThaiDatePicker();
 
-      // Check URL Query Parameter
+      // Check URL Query Parameter for Executive Link Lock
       const urlParams = new URLSearchParams(window.location.search);
       if (urlParams.get('mode') === 'executive') {
+        isExecutiveLocked = true;
         setSystemMode('executive');
       } else if (urlParams.get('mode') === 'management') {
+        isExecutiveLocked = false;
         setSystemMode('management');
       } else {
+        isExecutiveLocked = false;
         setSystemMode('executive');
       }
 
@@ -907,9 +917,17 @@ function doPost(e) {
     }
 
     function setSystemMode(mode) {
+      // Guardrail: Block switching to management if accessed via Executive Link
+      if (isExecutiveLocked && mode === 'management') {
+        showToast('ลิงก์นี้สำหรับผู้บริหารเข้าดูเท่านั้น ไม่สามารถสลับไปโหมดจัดการข้อมูลได้');
+        return;
+      }
+
       systemMode = mode;
       const btnExec = document.getElementById('btnModeExec');
       const btnManage = document.getElementById('btnModeManage');
+      const modeSwitcherContainer = document.getElementById('modeSwitcherContainer');
+      const execLockedBadge = document.getElementById('execLockedBadge');
       const badge = document.getElementById('appModeBadge');
       const notice = document.getElementById('currentRoleNotice');
       const btnOpenHeader = document.getElementById('btnOpenEntryHeader');
@@ -918,10 +936,20 @@ function doPost(e) {
       const deptChartCard = document.getElementById('deptChartCard');
       const tableSectionCard = document.getElementById('tableSectionCard');
 
+      // Control Mode Switcher UI visibility based on Executive Lock state
+      if (isExecutiveLocked) {
+        if (modeSwitcherContainer) modeSwitcherContainer.style.display = 'none';
+        if (execLockedBadge) execLockedBadge.classList.remove('hidden');
+      } else {
+        if (modeSwitcherContainer) modeSwitcherContainer.style.display = 'flex';
+        if (execLockedBadge) execLockedBadge.classList.add('hidden');
+      }
+
       if (mode === 'executive') {
-        btnExec.className = "px-3 py-1.5 rounded-lg font-semibold transition-all bg-emerald-600 text-white shadow-sm";
-        btnManage.className = "px-3 py-1.5 rounded-lg font-semibold transition-all text-slate-400 hover:text-white";
-        badge.textContent = "สิทธิ์ผู้บริหาร (อ่านอย่างเดียว)";
+        if (btnExec) btnExec.className = "px-3 py-1.5 rounded-lg font-semibold transition-all bg-emerald-600 text-white shadow-sm";
+        if (btnManage) btnManage.className = "px-3 py-1.5 rounded-lg font-semibold transition-all text-slate-400 hover:text-white";
+        
+        badge.textContent = isExecutiveLocked ? "สิทธิ์ผู้บริหาร (ล็อกอ่านอย่างเดียว)" : "สิทธิ์ผู้บริหาร (อ่านอย่างเดียว)";
         badge.className = "bg-emerald-500/20 text-emerald-300 text-[11px] px-2.5 py-0.5 rounded-full border border-emerald-400/30 font-medium";
         notice.textContent = "โหมดผู้บริหาร – สรุปภาพรวมการบริหารกระแสเงินสดและแผนภูมิวิเคราะห์";
         
@@ -932,8 +960,9 @@ function doPost(e) {
         if (deptChartCard) deptChartCard.classList.add('hidden');
         if (tableSectionCard) tableSectionCard.classList.add('hidden');
       } else {
-        btnManage.className = "px-3 py-1.5 rounded-lg font-semibold transition-all bg-amber-600 text-white shadow-sm";
-        btnExec.className = "px-3 py-1.5 rounded-lg font-semibold transition-all text-slate-400 hover:text-white";
+        if (btnManage) btnManage.className = "px-3 py-1.5 rounded-lg font-semibold transition-all bg-amber-600 text-white shadow-sm";
+        if (btnExec) btnExec.className = "px-3 py-1.5 rounded-lg font-semibold transition-all text-slate-400 hover:text-white";
+        
         badge.textContent = "โหมดจัดการข้อมูล (บันทึก/แก้ไข)";
         badge.className = "bg-amber-500/20 text-amber-300 text-[11px] px-2.5 py-0.5 rounded-full border border-amber-400/30 font-medium";
         notice.textContent = "โหมดจัดการข้อมูล – บันทึกประมาณการและยอดเกิดขึ้นจริงตามฝ่ายรับผิดชอบ";
@@ -1545,7 +1574,7 @@ function doPost(e) {
 
       document.getElementById('generatedLinkText').textContent = execUrl;
       document.getElementById('linkBanner').classList.remove('hidden');
-      showToast('คัดลอกลิงก์สำหรับผู้บริหารเข้าคลิปบอร์ดเรียบร้อยแล้ว');
+      showToast('คัดลอกลิงก์ผู้บริหารสำเร็จแล้ว (ล็อกหน้าเฉพาะผู้บริหาร ป้องกันการสับสน)');
     }
 
     function fmt(num) {
