@@ -70,7 +70,6 @@
 
 <body class="bg-slate-50 dark:bg-slate-950 text-slate-800 dark:text-slate-100 min-h-screen flex flex-col transition-colors duration-200">
 
-  <!-- ===== HEADER & TOP NAVIGATION ===== -->
   <header class="header-bg text-white sticky top-0 z-40 shadow-lg border-b border-emerald-600/30">
     <div class="max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-8 py-3">
       <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-3">
@@ -94,7 +93,7 @@
         <!-- System Mode Switcher & Tools -->
         <div class="flex flex-wrap items-center gap-2 no-print">
           
-          <!-- Mode Selector Buttons (Hidden when locked in Executive Mode via Executive Link) -->
+          <!-- Mode Selector Buttons -->
           <div id="modeSwitcherContainer" class="flex items-center bg-slate-800/90 rounded-xl p-1 border border-slate-700 text-xs">
             <button onclick="setSystemMode('executive')" id="btnModeExec" class="px-3 py-1.5 rounded-lg font-semibold transition-all flex items-center gap-1.5 text-slate-300">
               <i class="fa-solid fa-chart-pie"></i>
@@ -112,6 +111,12 @@
             <span>โหมดผู้บริหาร (อ่านอย่างเดียว)</span>
           </div>
 
+          <!-- Refresh Data Button -->
+          <button onclick="loadDataFromSource()" title="รีเฟรชข้อมูลจาก Google Sheet" class="bg-slate-800 hover:bg-slate-700 text-emerald-300 border border-emerald-500/30 px-3 py-1.5 rounded-xl text-xs font-semibold flex items-center gap-1.5 transition-all shadow-sm">
+            <i class="fa-solid fa-rotate-right text-emerald-400" id="refreshIcon"></i>
+            <span class="hidden sm:inline">รีเฟรชข้อมูล</span>
+          </button>
+
           <!-- User Manual Button -->
           <button onclick="openManualModal()" title="คู่มือการใช้งานระบบ" class="bg-slate-800 hover:bg-slate-700 text-amber-300 border border-amber-500/30 px-3 py-1.5 rounded-xl text-xs font-semibold flex items-center gap-1.5 transition-all shadow-sm">
             <i class="fa-solid fa-book-open text-amber-400"></i>
@@ -124,13 +129,13 @@
             <span class="hidden sm:inline">คัดลอกลิงก์ผู้บริหาร</span>
           </button>
 
-          <!-- Google Sheet Config Button (Management Mode) -->
+          <!-- Google Sheet Config Button -->
           <button onclick="openGoogleSheetModal()" id="btnSheetConfig" class="bg-slate-800 hover:bg-slate-700 border border-emerald-500/50 text-emerald-300 px-3 py-1.5 rounded-xl text-xs font-semibold flex items-center gap-1.5 transition-all shadow-sm manage-col">
             <i class="fa-solid fa-file-excel text-emerald-400"></i>
-            <span id="sheetStatusText">เชื่อมต่อ Google Sheet</span>
+            <span id="sheetStatusText">Google Sheet (Live)</span>
           </button>
 
-          <!-- Action Button: Entry Form (Management Only) -->
+          <!-- Action Button: Entry Form -->
           <button onclick="openDataEntryModal()" id="btnOpenEntryHeader" class="bg-emerald-600 hover:bg-emerald-500 text-white px-3 py-1.5 rounded-xl text-xs font-semibold flex items-center gap-1.5 transition-all shadow-sm manage-col">
             <i class="fa-solid fa-plus-circle text-sm"></i>
             <span>บันทึกข้อมูล</span>
@@ -153,7 +158,6 @@
     </div>
   </header>
 
-  <!-- ===== MAIN CONTENT ===== -->
   <main class="max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-8 py-5 flex-1 w-full space-y-5">
 
     <!-- Notification Toast Box -->
@@ -187,10 +191,10 @@
           <i class="fa-solid fa-sitemap text-xs"></i>
         </div>
         <div>
-          <span class="font-bold text-emerald-900 dark:text-emerald-300 block mb-0.5">โครงสร้างข้อมูลและการป้องกันความซ้ำซ้อน:</span>
+          <span class="font-bold text-emerald-900 dark:text-emerald-300 block mb-0.5">โครงสร้างข้อมูลและการเชื่อมต่อ Google Sheet:</span>
           <p class="text-[11px] text-slate-600 dark:text-slate-400 leading-relaxed">
-            • <strong>มิติสิ้นเดือน:</strong> ข้อมูลยุทธศาสตร์ (ประมาณการ vs เกิดขึ้นจริง) บันทึกโดย 4 ฝ่ายงานหลัก<br/>
-            • <strong>มิติรายสัปดาห์ / รายวัน:</strong> ข้อมูลปฏิบัติการติดตามสภาพคล่องสด บันทึกโดยฝ่ายการเงิน/ผู้จัดการ (ไม่นับยอดซ้ำซ้อนกับมิติสิ้นเดือน)
+            • <strong>แหล่งข้อมูลสด:</strong> เชื่อมต่อตรงกับ Google Sheet สหกรณ์ (ID: <code class="font-mono text-emerald-700 dark:text-emerald-400">1_d1uvz0dnJZ...</code>)<br/>
+            • <strong>มิติเวลา:</strong> สิ้นเดือน (ยุทธศาสตร์) / รายสัปดาห์ / รายวัน (ปฏิบัติการ)
           </p>
         </div>
       </div>
@@ -241,11 +245,10 @@
       <!-- Generated dynamically by JS -->
     </div>
 
-    <!-- Executive Visual Analytics Section (Charts) -->
-    <div class="grid grid-cols-1 lg:grid-cols-5 gap-4">
+    <div class="grid grid-cols-1 gap-4">
       
-      <!-- Chart 1: Combo Chart (Bar + Line) -->
-      <div id="comboChartCard" class="lg:col-span-3 bg-white dark:bg-slate-900 p-4 sm:p-5 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm space-y-3">
+      <!-- Chart: Combo Chart (Full Width) -->
+      <div id="comboChartCard" class="w-full bg-white dark:bg-slate-900 p-4 sm:p-5 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm space-y-3">
         <div class="flex items-center justify-between">
           <div>
             <h3 class="font-bold text-slate-800 dark:text-slate-100 text-sm sm:text-base flex items-center gap-2">
@@ -256,31 +259,13 @@
           </div>
           <span class="text-[11px] bg-indigo-100 dark:bg-indigo-950/80 text-indigo-700 dark:text-indigo-300 font-bold px-2.5 py-1 rounded-lg" id="chart1Badge">แผนภูมิผสม</span>
         </div>
-        <div style="height: 320px; position: relative;">
+        <div style="height: 350px; position: relative;">
           <canvas id="mainComboChart"></canvas>
-        </div>
-      </div>
-
-      <!-- Chart 2: Cash Flow Distribution by Department -->
-      <div id="deptChartCard" class="lg:col-span-2 bg-white dark:bg-slate-900 p-4 sm:p-5 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm space-y-3">
-        <div>
-          <h3 class="font-bold text-slate-800 dark:text-slate-100 text-sm sm:text-base flex items-center gap-2">
-            <i class="fa-solid fa-sitemap text-indigo-600"></i>
-            <span>สัดส่วนกระแสเงินสดตามฝ่ายที่รับผิดชอบ</span>
-          </h3>
-          <p class="text-xs text-slate-400">จำแนกตาม ฝ่ายสินเชื่อ, การเงิน, บัญชี และธุรการพัสดุ</p>
-        </div>
-        <div style="height: 210px; position: relative;" class="flex items-center justify-center">
-          <canvas id="deptPieChart"></canvas>
-        </div>
-        <div class="grid grid-cols-2 gap-2 text-xs" id="deptLegend">
-          <!-- Department Legend generated dynamically -->
         </div>
       </div>
 
     </div>
 
-    <!-- Detailed Cash Flow Statement Table -->
     <div id="tableSectionCard" class="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden space-y-3">
       
       <!-- Table Filter Bar -->
@@ -454,7 +439,7 @@
             <i class="fa-solid fa-file-excel"></i> 4. การบันทึกข้อมูลและการเลือกช่วงเวลาด้วยปฏิทิน ภาษาไทย
           </h4>
           <p class="text-xs">
-            เจ้าหน้าที่สามารถกดปุ่ม <strong>"บันทึกข้อมูล"</strong> เพื่อเปิดหน้าฟอร์ม เลือกลวันที่หรือช่วงเวลาของวันที่ด้วย <strong>ปฏิทิน ภาษาไทย (พ.ศ.)</strong> เช่น <i>"วันที่ 31 กรกฎาคม 2569 ถึง 3 สิงหาคม 2569"</i> แล้วบันทึกรายการเข้าสู่ Google Sheet ของสหกรณ์โดยตรง
+            เจ้าหน้าที่สามารถกดปุ่ม <strong>"บันทึกข้อมูล"</strong> เพื่อเปิดหน้าฟอร์ม เลือกลวันที่หรือช่วงเวลาของวันที่ด้วย <strong>ปฏิทิน ภาษาไทย (พ.ศ.)</strong> ได้ทุกมิติเวลา (รวมถึงข้อมูล ณ สิ้นเดือน) เช่น <i>"31 กรกฎาคม 2569"</i> หรือ <i>"วันที่ 31 กรกฎาคม 2569 ถึง 3 สิงหาคม 2569"</i> แล้วบันทึกรายการเข้าสู่ Google Sheet ของสหกรณ์โดยตรง
           </p>
           <div class="bg-amber-50 dark:bg-amber-950/40 p-3 rounded-xl border border-amber-200 dark:border-amber-800 text-amber-900 dark:text-amber-300 text-xs">
             <strong>📌 ข้อควรระวังในการติดตั้ง Google Sheets:</strong> ในการ Deploy Apps Script ต้องตั้งค่า <i>"Who has access"</i> เป็น <strong>"Everyone (ทุกคน)"</strong> เสมอ ข้อมูลจึงจะสามารถบันทึกจากหน้าเว็บเข้าสเปรดชีตได้
@@ -474,7 +459,7 @@
     </div>
   </div>
 
-  <!-- ===== DATA ENTRY & EDIT MODAL (MANAGEMENT MODE ONLY) ===== -->
+  <!-- ===== DATA ENTRY & EDIT MODAL ===== -->
   <div id="entryModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center hidden p-4">
     <div class="bg-white dark:bg-slate-900 rounded-2xl max-w-lg w-full border border-slate-200 dark:border-slate-800 shadow-2xl overflow-hidden">
       
@@ -572,14 +557,14 @@
 
       <div class="p-5 space-y-4 text-xs overflow-y-auto">
         <div class="bg-emerald-50 dark:bg-emerald-950/50 p-3 rounded-xl border border-emerald-200 dark:border-emerald-800 text-emerald-900 dark:text-emerald-300">
-          <span class="font-bold block mb-1">📌 วิธีเชื่อมต่อระบบเข้ากับ Google Sheet ของสหกรณ์:</span>
-          <p class="text-[11px] leading-relaxed">
-            ท่านสามารถบันทึกและซิงค์ข้อมูลจริงไปยัง Google Sheet ได้โดยการสร้าง <strong>Google Apps Script (Web App)</strong> ในสเปรดชีต แล้วนำ Web App URL มากรอกช่องด้านล่าง
+          <span class="font-bold block mb-1">📌 Google Sheet ปัจจุบันที่ใช้ดึงข้อมูล:</span>
+          <p class="text-[11px] leading-relaxed font-mono">
+            https://docs.google.com/spreadsheets/d/1_d1uvz0dnJZ-33OWypqWsyT5d2h6O1SwSYEL05GtbQo
           </p>
         </div>
 
         <div>
-          <label class="block font-semibold text-slate-700 dark:text-slate-300 mb-1">Google Apps Script Web App URL:</label>
+          <label class="block font-semibold text-slate-700 dark:text-slate-300 mb-1">Google Apps Script Web App URL (สำหรับการเขียน/แก้ไข/ลบ):</label>
           <input type="url" id="gasUrlInput" placeholder="https://script.google.com/macros/s/AKfycb.../exec" class="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl p-2.5 font-mono text-xs outline-none focus:ring-2 focus:ring-emerald-500" />
         </div>
 
@@ -593,26 +578,10 @@
           </div>
           <textarea id="gasCodeScript" readonly class="w-full h-40 bg-slate-900 text-emerald-400 font-mono text-[11px] p-3 rounded-xl border border-slate-700 outline-none select-all leading-normal"></textarea>
         </div>
-
-        <div class="bg-slate-100 dark:bg-slate-800 p-3 rounded-xl space-y-1 text-slate-600 dark:text-slate-400 text-[11px]">
-          <span class="font-bold text-slate-800 dark:text-slate-200 block">ขั้นตอนการติดตั้งใน Google Sheet (สำคัญมาก เพื่อให้บันทึกผ่าน):</span>
-          <ol class="list-decimal list-inside space-y-1.5">
-            <li>เปิด Google Sheet ไปที่เมนู <strong>ส่วนขยาย (Extensions) &gt; Apps Script</strong></li>
-            <li>ลบโค้ดเดิม วางโค้ดใหม่ด้านบน แล้วกด <strong>บันทึก (Ctrl+S)</strong></li>
-            <li>กด <strong>การทำให้ใช้งานได้ (Deploy) &gt; การทำให้ใช้งานได้ใหม่ (New deployment)</strong></li>
-            <li>เลือกชนิดเป็น <strong>เว็บแอป (Web App)</strong> และตั้งค่าสำคัญดังนี้:
-              <ul class="list-disc list-inside ml-4 text-emerald-600 dark:text-emerald-400 font-bold">
-                <li>สิทธิ์การเข้าถึง (Who has access): เลือก "ทุกคน (Anyone)" ⚠️ (หากไม่เลือกข้อนี้ จะบันทึกไม่เข้า)</li>
-              </ul>
-            </li>
-            <li>กด Deploy อนุญาตสิทธิ์ (Authorize access) แล้วคัดลอก <strong>Web App URL (ต้องลงท้ายด้วย /exec)</strong> มาวางในช่องด้านบน</li>
-            <li><span class="text-rose-500 font-bold">กรณีแก้ไขโค้ดใน Apps Script:</span> ต้องกด <i>Deploy &gt; Manage deployments &gt; กดรูปดินสอ &gt; เลือก "เวอร์ชันใหม่ (New version)"</i> เสมอ</li>
-          </ol>
-        </div>
       </div>
 
       <div class="p-4 bg-slate-50 dark:bg-slate-800/50 border-t border-slate-200 dark:border-slate-800 flex items-center justify-between flex-shrink-0">
-        <button type="button" onclick="clearGasUrl()" class="text-rose-600 hover:underline font-semibold text-xs">ยกเลิกการเชื่อมต่อ</button>
+        <button type="button" onclick="clearGasUrl()" class="text-rose-600 hover:underline font-semibold text-xs">รีเซ็ต Web App URL</button>
         <div class="flex items-center gap-2">
           <button type="button" onclick="closeGoogleSheetModal()" class="px-4 py-2 rounded-xl border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300">ปิด</button>
           <button type="button" onclick="saveGoogleSheetConfig()" class="px-5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold shadow-md">บันทึกการตั้งค่า</button>
@@ -624,21 +593,25 @@
 
   <!-- ===== JAVASCRIPT LOGIC ===== -->
   <script>
-    // Initial Dataset
+    // Target Google Sheet ID requested by user
+    const DEFAULT_SHEET_ID = '1_d1uvz0dnJZ-33OWypqWsyT5d2h6O1SwSYEL05GtbQo';
+    const DEFAULT_CSV_URL = `https://docs.google.com/spreadsheets/d/${DEFAULT_SHEET_ID}/gviz/tq?tqx=out:csv`;
+
+    // Fallback Sample Data if offline or sheet unpopulated
     const INITIAL_DATA = [
-      { id: 'm1', dimension: 'month_end', period: 'กรกฎาคม 2569', dept: 'ฝ่ายสินเชื่อ', type: 'รายการจ่าย', name: 'จ่ายเงินกู้สามัญแก่สมาชิก', estimate: 12000000, actual: 11500000 },
-      { id: 'm2', dimension: 'month_end', period: 'กรกฎาคม 2569', dept: 'ฝ่ายสินเชื่อ', type: 'รายการจ่าย', name: 'จ่ายเงินกู้เพื่อเหตุฉุกเฉิน', estimate: 2500000, actual: 2800000 },
-      { id: 'm3', dimension: 'month_end', period: 'กรกฎาคม 2569', dept: 'ฝ่ายสินเชื่อ', type: 'รายการรับ', name: 'รับชำระหนี้เงินกู้สามัญและฉุกเฉิน', estimate: 9500000, actual: 9800000 },
+      { id: 'm1', dimension: 'month_end', period: '31 กรกฎาคม 2569', dept: 'ฝ่ายสินเชื่อ', type: 'รายการจ่าย', name: 'จ่ายเงินกู้สามัญแก่สมาชิก', estimate: 12000000, actual: 11500000 },
+      { id: 'm2', dimension: 'month_end', period: '31 กรกฎาคม 2569', dept: 'ฝ่ายสินเชื่อ', type: 'รายการจ่าย', name: 'จ่ายเงินกู้เพื่อเหตุฉุกเฉิน', estimate: 2500000, actual: 2800000 },
+      { id: 'm3', dimension: 'month_end', period: '31 กรกฎาคม 2569', dept: 'ฝ่ายสินเชื่อ', type: 'รายการรับ', name: 'รับชำระหนี้เงินกู้สามัญและฉุกเฉิน', estimate: 9500000, actual: 9800000 },
       
-      { id: 'm4', dimension: 'month_end', period: 'กรกฎาคม 2569', dept: 'ฝ่ายการเงิน', type: 'รายการรับ', name: 'รับฝากเงินออมทรัพย์และประจำ', estimate: 4000000, actual: 3800000 },
-      { id: 'm5', dimension: 'month_end', period: 'กรกฎาคม 2569', dept: 'ฝ่ายการเงิน', type: 'รายการจ่าย', name: 'จ่ายถอนเงินฝากสมาชิก', estimate: 3500000, actual: 4100000 },
-      { id: 'm6', dimension: 'month_end', period: 'กรกฎาคม 2569', dept: 'ฝ่ายการเงิน', type: 'รายการรับ', name: 'รับค่าหุ้นรายเดือน', estimate: 3200000, actual: 3200000 },
+      { id: 'm4', dimension: 'month_end', period: '31 กรกฎาคม 2569', dept: 'ฝ่ายการเงิน', type: 'รายการรับ', name: 'รับฝากเงินออมทรัพย์และประจำ', estimate: 4000000, actual: 3800000 },
+      { id: 'm5', dimension: 'month_end', period: '31 กรกฎาคม 2569', dept: 'ฝ่ายการเงิน', type: 'รายการจ่าย', name: 'จ่ายถอนเงินฝากสมาชิก', estimate: 3500000, actual: 4100000 },
+      { id: 'm6', dimension: 'month_end', period: '31 กรกฎาคม 2569', dept: 'ฝ่ายการเงิน', type: 'รายการรับ', name: 'รับค่าหุ้นรายเดือน', estimate: 3200000, actual: 3200000 },
 
-      { id: 'm7', dimension: 'month_end', period: 'กรกฎาคม 2569', dept: 'ฝ่ายบัญชี', type: 'รายการจ่าย', name: 'จ่ายดอกเบี้ยเงินฝากสมาชิก', estimate: 1800000, actual: 1750000 },
-      { id: 'm8', dimension: 'month_end', period: 'กรกฎาคม 2569', dept: 'ฝ่ายบัญชี', type: 'รายการจ่าย', name: 'ค่าใช้จ่ายบริหารงานและเงินเดือนเจ้าหน้าที่', estimate: 850000, actual: 820000 },
+      { id: 'm7', dimension: 'month_end', period: '31 กรกฎาคม 2569', dept: 'ฝ่ายบัญชี', type: 'รายการจ่าย', name: 'จ่ายดอกเบี้ยเงินฝากสมาชิก', estimate: 1800000, actual: 1750000 },
+      { id: 'm8', dimension: 'month_end', period: '31 กรกฎาคม 2569', dept: 'ฝ่ายบัญชี', type: 'รายการจ่าย', name: 'ค่าใช้จ่ายบริหารงานและเงินเดือนเจ้าหน้าที่', estimate: 850000, actual: 820000 },
 
-      { id: 'm9', dimension: 'month_end', period: 'กรกฎาคม 2569', dept: 'ฝ่ายธุรการพัสดุ', type: 'รายการจ่าย', name: 'จ่ายสวัสดิการสมาชิกและสงเคราะห์ศพ', estimate: 1200000, actual: 1050000 },
-      { id: 'm10', dimension: 'month_end', period: 'กรกฎาคม 2569', dept: 'ฝ่ายธุรการพัสดุ', type: 'รายการจ่าย', name: 'ค่าวัสดุอุปกรณ์สำนักงานและครุภัณฑ์', estimate: 250000, actual: 210000 },
+      { id: 'm9', dimension: 'month_end', period: '31 กรกฎาคม 2569', dept: 'ฝ่ายธุรการพัสดุ', type: 'รายการจ่าย', name: 'จ่ายสวัสดิการสมาชิกและสงเคราะห์ศพ', estimate: 1200000, actual: 1050000 },
+      { id: 'm10', dimension: 'month_end', period: '31 กรกฎาคม 2569', dept: 'ฝ่ายธุรการพัสดุ', type: 'รายการจ่าย', name: 'ค่าวัสดุอุปกรณ์สำนักงานและครุภัณฑ์', estimate: 250000, actual: 210000 },
 
       { id: 'w1', dimension: 'weekly', period: 'สัปดาห์ที่ 1 (1-7 ก.ค.)', dept: 'ฝ่ายการเงิน', type: 'รายการรับ', name: 'รับชำระหนี้ผ่านระบบหักบัญชีเงินเดือน', estimate: 0, actual: 4200000 },
       { id: 'w2', dimension: 'weekly', period: 'สัปดาห์ที่ 1 (1-7 ก.ค.)', dept: 'ฝ่ายการเงิน', type: 'รายการจ่าย', name: 'จ่ายเงินกู้ฉุกเฉินประจำสัปดาห์', estimate: 0, actual: 1100000 },
@@ -646,7 +619,7 @@
       { id: 'd1', dimension: 'daily', period: 'วันที่ 31 กรกฎาคม 2569 ถึง 3 สิงหาคม 2569', dept: 'ฝ่ายการเงิน', type: 'รายการจ่าย', name: 'จ่ายเงินกู้แก่สมาชิก', estimate: 0, actual: 2000000 }
     ];
 
-    // Google Apps Script Code Template
+    // Google Apps Script Template
     const GAS_SCRIPT_TEMPLATE = `function doGet(e) {
   try {
     var ss = SpreadsheetApp.getActiveSpreadsheet();
@@ -732,13 +705,12 @@ function doPost(e) {
   }
 }`;
 
-    // Application Global State
+    // Global App Variables
     let appData = [];
     let systemMode = 'executive'; 
     let isExecutiveLocked = false; 
     let currentTimeView = 'month_end'; 
     let mainChartInstance = null;
-    let deptChartInstance = null;
     let isDark = false;
     let gasWebUrl = localStorage.getItem('satun_coop_gas_url') || '';
     let datePickerInstance = null;
@@ -814,7 +786,6 @@ function doPost(e) {
       }
     }
 
-    // Initialization
     window.addEventListener('DOMContentLoaded', () => {
       initTheme();
       document.getElementById('gasCodeScript').value = GAS_SCRIPT_TEMPLATE;
@@ -881,8 +852,13 @@ function doPost(e) {
     }
 
     async function loadDataFromSource() {
+      const refreshIcon = document.getElementById('refreshIcon');
+      if (refreshIcon) refreshIcon.classList.add('fa-spin');
+
+      showToast('กำลังโหลดข้อมูลล่าสุดจาก Google Sheet...');
+
+      // 1. Try Apps Script Web App URL if specified
       if (gasWebUrl) {
-        showToast('กำลังโหลดข้อมูลจาก Google Sheet...');
         try {
           const res = await fetch(gasWebUrl);
           if (res.ok) {
@@ -890,19 +866,115 @@ function doPost(e) {
             if (Array.isArray(data) && data.length > 0) {
               appData = data;
               saveToLocalStorage();
-              showToast('โหลดข้อมูลจาก Google Sheet สำเร็จ');
-              setTimeView('month_end');
+              showToast('โหลดข้อมูลจาก Google Sheet (Web App) สำเร็จ');
+              if (refreshIcon) refreshIcon.classList.remove('fa-spin');
+              setTimeView(currentTimeView);
               return;
             }
           }
         } catch (e) {
-          console.warn('Cannot fetch from Google Sheet, falling back to LocalStorage', e);
-          showToast('ไม่สามารถเชื่อมต่อ Google Sheet ได้ ใช้ข้อมูลสำรองในเครื่องแทน');
+          console.warn('Apps Script fetch failed, trying direct Google Sheet CSV fetch', e);
         }
       }
 
+      // 2. Direct Fetch from Google Sheet CSV endpoint
+      try {
+        let csvText = '';
+        try {
+          const res = await fetch(DEFAULT_CSV_URL, { cache: 'no-store' });
+          if (res.ok) csvText = await res.text();
+        } catch (err) {
+          // Try CORS proxy if direct fetch fails
+          const proxyUrl = 'https://corsproxy.io/?' + encodeURIComponent(DEFAULT_CSV_URL);
+          const proxyRes = await fetch(proxyUrl, { cache: 'no-store' });
+          if (proxyRes.ok) csvText = await proxyRes.text();
+        }
+
+        if (csvText) {
+          const parsed = parseGoogleSheetCSV(csvText);
+          if (parsed && parsed.length > 0) {
+            appData = parsed;
+            saveToLocalStorage();
+            showToast('เชื่อมต่อและโหลดข้อมูลจาก Google Sheet สำเร็จแล้ว');
+            if (refreshIcon) refreshIcon.classList.remove('fa-spin');
+            setTimeView(currentTimeView);
+            return;
+          }
+        }
+      } catch (err) {
+        console.warn('Google Sheet CSV load error:', err);
+      }
+
+      // 3. Fallback to LocalStorage
+      if (refreshIcon) refreshIcon.classList.remove('fa-spin');
+      showToast('ไม่สามารถเชื่อมต่อ Google Sheet ได้ ใช้ข้อมูลสำรองในระบบแทน');
       loadStoredLocalStorage();
-      setTimeView('month_end');
+      setTimeView(currentTimeView);
+    }
+
+    function parseGoogleSheetCSV(csvText) {
+      const lines = csvText.split(/\r?\n/);
+      if (lines.length < 2) return [];
+
+      function splitLine(line) {
+        const fields = [];
+        let inQuotes = false, current = '';
+        for (let i = 0; i < line.length; i++) {
+          const c = line[i];
+          if (c === '"') { inQuotes = !inQuotes; }
+          else if (c === ',' && !inQuotes) { fields.push(current.trim()); current = ''; }
+          else { current += c; }
+        }
+        fields.push(current.trim());
+        return fields.map(f => f.replace(/^"|"$/g, '').trim());
+      }
+
+      const rawHeaders = splitLine(lines[0]);
+      const headers = rawHeaders.map(h => h.toLowerCase());
+
+      const findIdx = (keywords) => headers.findIndex(h => keywords.some(k => h.includes(k)));
+
+      const idIdx = findIdx(['id']);
+      const dimIdx = findIdx(['dimension', 'มิติ']);
+      const periodIdx = findIdx(['period', 'งวด', 'วันที่', 'เดือน']);
+      const deptIdx = findIdx(['dept', 'department', 'ฝ่าย', 'หน่วยงาน']);
+      const typeIdx = findIdx(['type', 'ประเภท']);
+      const nameIdx = findIdx(['name', 'item', 'รายการ']);
+      const estIdx = findIdx(['estimate', 'ประมาณการ']);
+      const actIdx = findIdx(['actual', 'เกิดขึ้นจริง', 'จ่ายจริง', 'รับจริง', 'บาท']);
+
+      const parsed = [];
+      for (let i = 1; i < lines.length; i++) {
+        if (!lines[i].trim()) continue;
+        const cols = splitLine(lines[i]);
+        const nameVal = nameIdx !== -1 ? cols[nameIdx] : cols[0];
+        if (!nameVal || nameVal.startsWith('รวม')) continue;
+
+        const actVal = actIdx !== -1 ? parseFloat((cols[actIdx] || '0').replace(/,/g, '')) || 0 : 0;
+        const estVal = estIdx !== -1 ? parseFloat((cols[estIdx] || '0').replace(/,/g, '')) || 0 : 0;
+        const typeVal = typeIdx !== -1 ? cols[typeIdx] : (actVal >= 0 ? 'รายการรับ' : 'รายการจ่าย');
+        const deptVal = deptIdx !== -1 ? cols[deptIdx] : 'ฝ่ายการเงิน';
+        const periodVal = periodIdx !== -1 ? cols[periodIdx] : '31 กรกฎาคม 2569';
+        let dimVal = dimIdx !== -1 ? cols[dimIdx] : '';
+
+        if (!dimVal) {
+          if (periodVal.includes('สัปดาห์')) dimVal = 'weekly';
+          else if (periodVal.includes('ถึง') || periodVal.includes('วันที่') || periodVal.match(/\d{1,2}\s+[ก-ฮ]/)) dimVal = 'daily';
+          else dimVal = 'month_end';
+        }
+
+        parsed.push({
+          id: idIdx !== -1 && cols[idIdx] ? cols[idIdx] : 'gs_' + i + '_' + Date.now(),
+          dimension: dimVal,
+          period: periodVal,
+          dept: deptVal,
+          type: typeVal,
+          name: nameVal,
+          estimate: estVal,
+          actual: actVal
+        });
+      }
+      return parsed;
     }
 
     function loadStoredLocalStorage() {
@@ -963,7 +1035,6 @@ function doPost(e) {
       const btnOpenHeader = document.getElementById('btnOpenEntryHeader');
       const manageCols = document.querySelectorAll('.manage-col');
       const comboChartCard = document.getElementById('comboChartCard');
-      const deptChartCard = document.getElementById('deptChartCard');
       const tableSectionCard = document.getElementById('tableSectionCard');
 
       if (isExecutiveLocked) {
@@ -985,8 +1056,7 @@ function doPost(e) {
         if (btnOpenHeader) btnOpenHeader.style.display = 'none';
         manageCols.forEach(col => col.style.display = 'none');
 
-        if (comboChartCard) comboChartCard.className = "lg:col-span-5 bg-white dark:bg-slate-900 p-4 sm:p-5 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm space-y-3";
-        if (deptChartCard) deptChartCard.classList.add('hidden');
+        if (comboChartCard) comboChartCard.className = "w-full bg-white dark:bg-slate-900 p-4 sm:p-5 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm space-y-3";
         if (tableSectionCard) tableSectionCard.classList.add('hidden');
       } else {
         if (btnManage) btnManage.className = "px-3 py-1.5 rounded-lg font-semibold transition-all bg-amber-600 text-white shadow-sm";
@@ -999,8 +1069,7 @@ function doPost(e) {
         if (btnOpenHeader) btnOpenHeader.style.display = 'inline-flex';
         manageCols.forEach(col => col.style.display = 'inline-flex');
 
-        if (comboChartCard) comboChartCard.className = "lg:col-span-3 bg-white dark:bg-slate-900 p-4 sm:p-5 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm space-y-3";
-        if (deptChartCard) deptChartCard.classList.remove('hidden');
+        if (comboChartCard) comboChartCard.className = "w-full bg-white dark:bg-slate-900 p-4 sm:p-5 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm space-y-3";
         if (tableSectionCard) tableSectionCard.classList.remove('hidden');
       }
 
@@ -1164,7 +1233,7 @@ function doPost(e) {
 
       if (mainChartInstance) mainChartInstance.destroy();
       const mainCtx = document.getElementById('mainComboChart').getContext('2d');
-      const labels = data.map(i => i.name.length > 20 ? i.name.slice(0, 20) + '...' : i.name);
+      const labels = data.map(i => i.name.length > 25 ? i.name.slice(0, 25) + '...' : i.name);
 
       if (currentTimeView === 'month_end') {
         mainChartInstance = new Chart(mainCtx, {
@@ -1262,41 +1331,6 @@ function doPost(e) {
           }
         });
       }
-
-      if (deptChartInstance) deptChartInstance.destroy();
-      const deptCtx = document.getElementById('deptPieChart').getContext('2d');
-
-      const depts = ['ฝ่ายสินเชื่อ', 'ฝ่ายการเงิน', 'ฝ่ายบัญชี', 'ฝ่ายธุรการพัสดุ'];
-      const deptTotals = depts.map(d => data.filter(i => i.dept === d).reduce((s, i) => s + (i.actual || 0), 0));
-      const colors = ['#16a34a', '#4f46e5', '#d97706', '#db2777'];
-
-      deptChartInstance = new Chart(deptCtx, {
-        type: 'doughnut',
-        data: {
-          labels: depts,
-          datasets: [{ data: deptTotals, backgroundColor: colors, borderWidth: 2, borderColor: isDark ? '#0f172a' : '#ffffff' }]
-        },
-        options: {
-          responsive: true,
-          maintainAspectRatio: false,
-          cutout: '68%',
-          plugins: {
-            legend: { display: false },
-            tooltip: { callbacks: { label: ctx => ` ${depts[ctx.dataIndex]}: ${fmt(ctx.raw)} บาท` } }
-          }
-        }
-      });
-
-      const totalAll = deptTotals.reduce((a, b) => a + b, 0);
-      document.getElementById('deptLegend').innerHTML = depts.map((d, idx) => `
-        <div class="flex items-center gap-1.5 bg-slate-50 dark:bg-slate-800 p-1.5 rounded-lg border border-slate-100 dark:border-slate-800">
-          <span class="w-2.5 h-2.5 rounded-full flex-shrink-0" style="background-color:${colors[idx]}"></span>
-          <div class="min-w-0">
-            <p class="text-[10px] text-slate-400 truncate">${d}</p>
-            <p class="text-xs font-bold text-slate-700 dark:text-slate-200 number-cell">${fmtShort(deptTotals[idx])} (${totalAll > 0 ? ((deptTotals[idx]/totalAll)*100).toFixed(0) : 0}%)</p>
-          </div>
-        </div>
-      `).join('');
     }
 
     function renderTable() {
@@ -1355,7 +1389,6 @@ function doPost(e) {
       }).join('');
     }
 
-    // Manual Modal Helper
     function openManualModal() {
       document.getElementById('manualModal').classList.remove('hidden');
     }
@@ -1364,7 +1397,6 @@ function doPost(e) {
       document.getElementById('manualModal').classList.add('hidden');
     }
 
-    // Form & Entry Management
     function openDataEntryModal(editId = null) {
       if (systemMode === 'executive') return;
       
@@ -1465,7 +1497,6 @@ function doPost(e) {
       const action = editingId ? 'update' : 'create';
       showToast(editingId ? 'กำลังบันทึกการแก้ไขไปยัง Google Sheet...' : 'กำลังบันทึกรายการไปยัง Google Sheet...');
 
-      // Sync to Google Sheet API
       const success = await syncToGoogleSheet(action, { item: itemData });
 
       if (editingId) {
@@ -1482,7 +1513,7 @@ function doPost(e) {
       document.getElementById('periodSelect').value = period;
       renderDashboard();
 
-      showToast(success ? `บันทึกรายการ "${name}" เรียบร้อยแล้ว` : `บันทึกในเครื่องเรียบร้อยแล้ว (ไม่พบการเชื่อมต่อ Sheet)`);
+      showToast(success ? `บันทึกรายการ "${name}" เรียบร้อยแล้ว` : `บันทึกในเครื่องเรียบร้อยแล้ว`);
     }
 
     async function deleteEntry(id) {
@@ -1509,7 +1540,7 @@ function doPost(e) {
 
       let countUpdated = 0;
       dailyItems.forEach(dItem => {
-        const targetMonthPeriod = 'กรกฎาคม 2569';
+        const targetMonthPeriod = '31 กรกฎาคม 2569';
         let existingMonthItem = appData.find(m => m.dimension === 'month_end' && m.period === targetMonthPeriod && m.name === dItem.name);
 
         if (existingMonthItem) {
@@ -1538,7 +1569,6 @@ function doPost(e) {
       showToast(`รวมยอดข้อมูลรายวันเข้าสู่รายงานสิ้นเดือนเรียบร้อยแล้ว (${countUpdated} รายการ)`);
     }
 
-    // Google Sheets Config Modal Management
     function openGoogleSheetModal() {
       document.getElementById('gasUrlInput').value = gasWebUrl;
       document.getElementById('sheetConfigModal').classList.remove('hidden');
@@ -1559,7 +1589,8 @@ function doPost(e) {
         showToast('บันทึก URL การเชื่อมต่อ Google Sheet เรียบร้อยแล้ว');
         loadDataFromSource();
       } else {
-        showToast('ยกเลิกการเชื่อมต่อ Google Sheet แล้ว');
+        showToast('ใช้วิธีดึงข้อมูลอ่านตรงจาก Google Sheet');
+        loadDataFromSource();
       }
     }
 
@@ -1571,11 +1602,11 @@ function doPost(e) {
     function updateSheetStatusUI() {
       const text = document.getElementById('sheetStatusText');
       if (gasWebUrl) {
-        text.textContent = 'Google Sheet: เชื่อมต่อแล้ว';
+        text.textContent = 'Google Sheet (Web App)';
         text.className = 'text-emerald-400 font-bold';
       } else {
-        text.textContent = 'ตั้งค่า Google Sheet';
-        text.className = 'text-slate-300';
+        text.textContent = 'Google Sheet (Live)';
+        text.className = 'text-emerald-300 font-medium';
       }
     }
 
@@ -1603,7 +1634,7 @@ function doPost(e) {
 
       document.getElementById('generatedLinkText').textContent = execUrl;
       document.getElementById('linkBanner').classList.remove('hidden');
-      showToast('คัดลอกลิงก์ผู้บริหารสำเร็จแล้ว (ล็อกหน้าเฉพาะผู้บริหาร ป้องกันการสับสน)');
+      showToast('คัดลอกลิงก์ผู้บริหารสำเร็จแล้ว (ล็อกหน้าเฉพาะผู้บริหาร)');
     }
 
     function fmt(num) {
