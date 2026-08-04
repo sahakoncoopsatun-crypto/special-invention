@@ -1301,33 +1301,25 @@ function postData(e) {
       });
 
       const chart1Title = document.getElementById('chart1Title');
-      const chart2Title = document.getElementById('chart2Title');
       const chart1Sub = document.getElementById('chart1Sub');
-      const chart2Sub = document.getElementById('chart2Sub');
       const estHeader = document.getElementById('colEstimateHeader');
       const actHeader = document.getElementById('colActualHeader');
 
       if (view === 'month_end') {
-        chart1Title.textContent = 'แนวโน้ม "รายรับ"';
-        chart1Sub.textContent = 'เปรียบเทียบประมาณการรับ (เส้นประ) และรับจริง (เส้นทึบ)';
-        chart2Title.textContent = 'แนวโน้ม "รายจ่าย"';
-        chart2Sub.textContent = 'เปรียบเทียบงบประมาณจ่าย (เส้นประ) และจ่ายจริง (เส้นทึบ)';
-        estHeader.textContent = 'ประมาณการ (บาท)';
-        actHeader.textContent = 'เกิดขึ้นจริง (บาท)';
+        if (chart1Title) chart1Title.textContent = 'ภาพรวมกระแสเงินสด: ประมาณการ vs จริง (สิ้นเดือน)';
+        if (chart1Sub) chart1Sub.textContent = 'สีเขียว = รายรับ · สีแดง = รายจ่าย · เส้นประ = ประมาณการ · เส้นทึบ = จริง · แกน Y ซ้าย = รายรับ, แกน Y ขวา = รายจ่าย';
+        if (estHeader) estHeader.textContent = 'ประมาณการ (บาท)';
+        if (actHeader) actHeader.textContent = 'เกิดขึ้นจริง (บาท)';
       } else if (view === 'weekly') {
-        chart1Title.textContent = 'แนวโน้มรายรับสัปดาห์';
-        chart1Sub.textContent = 'ยอดรายรับเป้าหมายเทียบกับรายรับจริง';
-        chart2Title.textContent = 'แนวโน้มรายจ่ายสัปดาห์';
-        chart2Sub.textContent = 'ยอดรายจ่ายเป้าหมายเทียบกับรายจ่ายจริง';
-        estHeader.textContent = 'ประมาณการ (บาท)';
-        actHeader.textContent = 'เกิดขึ้นจริง (บาท)';
+        if (chart1Title) chart1Title.textContent = 'ภาพรวมกระแสเงินสดรายสัปดาห์: ประมาณการ vs จริง';
+        if (chart1Sub) chart1Sub.textContent = 'เปรียบเทียบยอดรับ-จ่ายตามแผนและที่เกิดขึ้นจริงในรอบสัปดาห์';
+        if (estHeader) estHeader.textContent = 'ประมาณการ (บาท)';
+        if (actHeader) actHeader.textContent = 'เกิดขึ้นจริง (บาท)';
       } else {
-        chart1Title.textContent = 'แนวโน้มรายรับรายวัน';
-        chart1Sub.textContent = 'ความเคลื่อนไหวรายรับแต่ละวัน';
-        chart2Title.textContent = 'แนวโน้มรายจ่ายรายวัน';
-        chart2Sub.textContent = 'ความเคลื่อนไหวรายจ่ายแต่ละวัน';
-        estHeader.textContent = 'ประมาณการ (บาท)';
-        actHeader.textContent = 'เกิดขึ้นจริง (บาท)';
+        if (chart1Title) chart1Title.textContent = 'ภาพรวมกระแสเงินสดรายวัน: ประมาณการ vs จริง';
+        if (chart1Sub) chart1Sub.textContent = 'ความเคลื่อนไหวของเงินสดรับ-จ่ายแต่ละวัน';
+        if (estHeader) estHeader.textContent = 'ประมาณการ (บาท)';
+        if (actHeader) actHeader.textContent = 'เกิดขึ้นจริง (บาท)';
       }
 
       populatePeriodDropdown();
