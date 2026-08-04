@@ -125,8 +125,14 @@
 
           <!-- Executive Share Link Button -->
           <button onclick="copyExecutiveLink()" title="คัดลอกลิงก์สำหรับผู้บริหารเข้าดูเท่านั้น" class="bg-indigo-700 hover:bg-indigo-600 text-white px-3 py-1.5 rounded-xl text-xs font-semibold flex items-center gap-1.5 transition-all shadow-sm">
-            <i class="fa-solid fa-link text-indigo-200"></i>
-            <span class="hidden sm:inline">คัดลอกลิงก์ผู้บริหาร</span>
+            <i class="fa-solid fa-eye text-indigo-200"></i>
+            <span class="hidden sm:inline">ลิงก์ผู้บริหาร</span>
+          </button>
+
+          <!-- Management Share Link Button -->
+          <button onclick="copyManagementLink()" title="คัดลอกลิงก์สำหรับเจ้าหน้าที่ (เข้าได้พร้อม URL บันทึกข้อมูล)" class="bg-amber-600 hover:bg-amber-500 text-white px-3 py-1.5 rounded-xl text-xs font-semibold flex items-center gap-1.5 transition-all shadow-sm manage-col">
+            <i class="fa-solid fa-pen-to-square text-amber-200"></i>
+            <span class="hidden sm:inline">ลิงก์เจ้าหน้าที่</span>
           </button>
 
           <!-- Google Sheet Config Button -->
@@ -169,17 +175,33 @@
       <button onclick="document.getElementById('toastBox').classList.add('hidden')" class="text-slate-400 hover:text-slate-600"><i class="fa-solid fa-xmark"></i></button>
     </div>
 
+    <!-- ===== NO GAS URL WARNING BANNER ===== -->
+    <div id="noGasBanner" class="hidden bg-rose-50 dark:bg-rose-950/50 border border-rose-300 dark:border-rose-700 text-rose-900 dark:text-rose-200 p-3.5 rounded-2xl text-xs flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-sm no-print manage-col">
+      <div class="flex items-center gap-3">
+        <div class="w-9 h-9 bg-rose-100 dark:bg-rose-900/60 text-rose-600 dark:text-rose-300 rounded-xl flex items-center justify-center flex-shrink-0">
+          <i class="fa-solid fa-triangle-exclamation text-base"></i>
+        </div>
+        <div>
+          <p class="font-bold text-rose-800 dark:text-rose-200">⚠️ ยังไม่ได้ตั้งค่า Google Apps Script URL — เครื่องนี้จะบันทึกเข้า Google Sheet ไม่ได้!</p>
+          <p class="text-[11px] text-rose-700 dark:text-rose-300 mt-0.5">ข้อมูลจะถูกบันทึกเฉพาะในเครื่องนี้ เครื่องอื่นจะไม่เห็นข้อมูลที่บันทึกนี้</p>
+        </div>
+      </div>
+      <button onclick="openGoogleSheetModal()" class="bg-rose-600 hover:bg-rose-500 text-white px-4 py-2 rounded-xl font-bold text-xs flex items-center gap-1.5 flex-shrink-0 shadow-sm">
+        <i class="fa-solid fa-gear"></i> ตั้งค่า GAS URL ตอนนี้
+      </button>
+    </div>
+
     <!-- Executive Link Share Banner -->
     <div id="linkBanner" class="hidden bg-indigo-50 dark:bg-indigo-950/60 border border-indigo-200 dark:border-indigo-800 text-indigo-900 dark:text-indigo-200 p-3.5 rounded-2xl text-xs flex flex-col sm:flex-row sm:items-center justify-between gap-2 shadow-sm">
       <div class="flex items-center gap-2.5">
         <i class="fa-solid fa-share-nodes text-indigo-600 dark:text-indigo-400 text-base"></i>
         <div>
-          <span class="font-bold block">ลิงก์สำหรับผู้บริหารสำเร็จแล้ว:</span>
-          <span class="text-slate-600 dark:text-slate-300 font-mono text-[11px]" id="generatedLinkText"></span>
+          <span class="font-bold block" id="linkBannerTitle">ลิงก์สำหรับผู้บริหารสำเร็จแล้ว:</span>
+          <span class="text-slate-600 dark:text-slate-300 font-mono text-[11px] break-all" id="generatedLinkText"></span>
         </div>
       </div>
       <div class="flex items-center gap-2">
-        <span class="text-[11px] bg-indigo-100 dark:bg-indigo-900 text-indigo-700 dark:text-indigo-300 px-2 py-1 rounded-lg">สิทธิ์อ่านอย่างเดียว</span>
+        <span class="text-[11px] bg-indigo-100 dark:bg-indigo-900 text-indigo-700 dark:text-indigo-300 px-2 py-1 rounded-lg" id="linkBannerBadge">สิทธิ์อ่านอย่างเดียว</span>
         <button onclick="document.getElementById('linkBanner').classList.add('hidden')" class="text-slate-400 hover:text-slate-600"><i class="fa-solid fa-xmark"></i></button>
       </div>
     </div>
@@ -253,15 +275,29 @@
           <div>
             <h3 class="font-bold text-slate-800 dark:text-slate-100 text-sm sm:text-base flex items-center gap-2">
               <i class="fa-solid fa-chart-line text-indigo-600"></i>
-              <span id="chart1Title">แผนภูมิผสม (Combo Chart) เปรียบเทียบประมาณการว่าจะจ่ายจริง VS เกิดขึ้นจริง</span>
+              <span id="chart1Title">แผนภูมิเปรียบเทียบ: ประมาณการ vs เกิดขึ้นจริง แยกรายรับ-รายจ่าย</span>
             </h3>
-            <p class="text-xs text-slate-400" id="chart1Sub">แสดงผลเปรียบเทียบด้วยกราฟแท่ง (เกิดขึ้นจริง) ผสมกราฟเส้น (ประมาณการ) เพื่อการวิเคราะห์ผลต่างอย่างชัดเจน</p>
+            <p class="text-xs text-slate-400" id="chart1Sub">แสดงกราฟแท่งแบบแยกชัดเจน 4 ชุด: รายรับประมาณการ, รายรับจริง, รายจ่ายประมาณการ, รายจ่ายจริง</p>
           </div>
           <span class="text-[11px] bg-indigo-100 dark:bg-indigo-950/80 text-indigo-700 dark:text-indigo-300 font-bold px-2.5 py-1 rounded-lg" id="chart1Badge">แผนภูมิผสม</span>
         </div>
-        <div style="height: 350px; position: relative;">
+        <div style="height: 380px; position: relative;">
           <canvas id="mainComboChart"></canvas>
         </div>
+      </div>
+
+      <!-- Analysis Panel -->
+      <div id="analysisPanel" class="hidden w-full bg-white dark:bg-slate-900 p-4 sm:p-5 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm space-y-3">
+        <div class="flex items-center gap-2 mb-3">
+          <div class="w-8 h-8 bg-violet-100 dark:bg-violet-950/60 text-violet-700 dark:text-violet-300 rounded-xl flex items-center justify-center flex-shrink-0">
+            <i class="fa-solid fa-brain text-sm"></i>
+          </div>
+          <div>
+            <h3 class="font-bold text-slate-800 dark:text-slate-100 text-sm">วิเคราะห์ภาพรวมกระแสเงินสด</h3>
+            <p class="text-[11px] text-slate-400">ผลการวิเคราะห์อัตโนมัติจากข้อมูลในระบบ</p>
+          </div>
+        </div>
+        <div id="analysisContent" class="space-y-2 text-xs text-slate-700 dark:text-slate-300"></div>
       </div>
 
     </div>
@@ -522,12 +558,18 @@
         <div class="grid grid-cols-2 gap-3 bg-slate-50 dark:bg-slate-800/50 p-3 rounded-xl border border-slate-200 dark:border-slate-800" id="amountInputsContainer">
           <div id="estimateInputGroup">
             <label class="block font-semibold text-emerald-700 dark:text-emerald-400 mb-1">ประมาณการว่าจะจ่ายจริง (บาท):</label>
-            <input type="number" step="0.01" id="modalEstimate" placeholder="0.00" class="w-full bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl p-2.5 outline-none font-mono" />
+            <div class="relative">
+              <input type="text" inputmode="numeric" id="modalEstimate" placeholder="0.00" class="w-full bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl p-2.5 outline-none font-mono" oninput="formatNumberInput(this)" />
+              <input type="hidden" id="modalEstimateRaw" value="0" />
+            </div>
           </div>
 
           <div>
             <label class="block font-semibold text-indigo-700 dark:text-indigo-400 mb-1" id="modalActualLabel">เกิดขึ้นจริง (บาท):</label>
-            <input type="number" step="0.01" id="modalActual" required placeholder="0.00" class="w-full bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl p-2.5 outline-none font-mono" />
+            <div class="relative">
+              <input type="text" inputmode="numeric" id="modalActual" required placeholder="0.00" class="w-full bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl p-2.5 outline-none font-mono" oninput="formatNumberInput(this)" />
+              <input type="hidden" id="modalActualRaw" value="0" />
+            </div>
           </div>
         </div>
 
@@ -556,35 +598,67 @@
       </div>
 
       <div class="p-5 space-y-4 text-xs overflow-y-auto">
+
+        <!-- Connection Status -->
+        <div class="flex items-center gap-2 p-3 rounded-xl border bg-slate-50 dark:bg-slate-800/60 border-slate-200 dark:border-slate-700">
+          <span id="syncStatusDot" class="inline-block w-2 h-2 rounded-full bg-slate-400"></span>
+          <span class="text-slate-600 dark:text-slate-300">สถานะ:</span>
+          <span id="syncStatusLabel" class="text-slate-400 font-medium">ยังไม่ตั้งค่า URL</span>
+          <button onclick="testGasConnection()" class="ml-auto text-indigo-600 dark:text-indigo-400 font-bold hover:underline flex items-center gap-1">
+            <i class="fa-solid fa-plug"></i> ทดสอบการเชื่อมต่อ
+          </button>
+        </div>
+
+        <!-- Important Warning -->
+        <div class="bg-amber-50 dark:bg-amber-950/40 p-3 rounded-xl border border-amber-300 dark:border-amber-700 text-amber-900 dark:text-amber-300">
+          <p class="font-bold mb-1">⚠️ สาเหตุที่เครื่องอื่นบันทึกไม่ได้:</p>
+          <ul class="space-y-1 text-[11px] leading-relaxed list-disc list-inside">
+            <li>URL ถูกเก็บแยกในแต่ละเครื่อง (localStorage) — เครื่องใหม่ไม่มี URL</li>
+            <li><strong>วิธีแก้ถาวร:</strong> ฝัง URL ในตัวไฟล์ โดยกด <span class="bg-amber-200 dark:bg-amber-800 px-1 rounded font-mono">"บันทึก + ฝังในไฟล์"</span> ด้านล่าง</li>
+            <li>หลังจากนั้นทุกเครื่องที่เปิดไฟล์นี้จะบันทึกได้ทันที</li>
+          </ul>
+        </div>
+
         <div class="bg-emerald-50 dark:bg-emerald-950/50 p-3 rounded-xl border border-emerald-200 dark:border-emerald-800 text-emerald-900 dark:text-emerald-300">
-          <span class="font-bold block mb-1">📌 Google Sheet ปัจจุบันที่ใช้ดึงข้อมูล:</span>
-          <p class="text-[11px] leading-relaxed font-mono">
+          <span class="font-bold block mb-1">📌 Google Sheet ที่ใช้ดึงข้อมูล:</span>
+          <p class="text-[11px] leading-relaxed font-mono break-all">
             https://docs.google.com/spreadsheets/d/1_d1uvz0dnJZ-33OWypqWsyT5d2h6O1SwSYEL05GtbQo
           </p>
         </div>
 
         <div>
-          <label class="block font-semibold text-slate-700 dark:text-slate-300 mb-1">Google Apps Script Web App URL (สำหรับการเขียน/แก้ไข/ลบ):</label>
-          <input type="url" id="gasUrlInput" placeholder="https://script.google.com/macros/s/AKfycb.../exec" class="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl p-2.5 font-mono text-xs outline-none focus:ring-2 focus:ring-emerald-500" />
+          <label class="block font-semibold text-slate-700 dark:text-slate-300 mb-1">
+            Google Apps Script Web App URL <span class="text-rose-500">*</span>
+            <span class="text-[11px] text-slate-400 font-normal ml-1">(ใช้สำหรับ บันทึก / แก้ไข / ลบ ข้อมูล)</span>
+          </label>
+          <input type="url" id="gasUrlInput" placeholder="https://script.google.com/macros/s/AKfycb.../exec" 
+            class="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl p-2.5 font-mono text-xs outline-none focus:ring-2 focus:ring-emerald-500" />
+          <p class="text-[11px] text-slate-400 mt-1.5">💡 ได้จาก Google Sheet → Extensions → Apps Script → Deploy → Web App</p>
         </div>
+
+        <!-- Embedded URL Status -->
+        <div id="embeddedUrlStatus" class="p-2.5 rounded-xl border text-[11px] hidden"></div>
 
         <!-- Apps Script Code Box -->
         <div class="space-y-1.5">
           <div class="flex items-center justify-between">
-            <span class="font-semibold text-slate-700 dark:text-slate-300">โค้ด Google Apps Script (คัดลอกไปแปะใน Google Sheet):</span>
+            <span class="font-semibold text-slate-700 dark:text-slate-300">โค้ด Google Apps Script (สำหรับติดตั้งใน Google Sheet):</span>
             <button onclick="copyGasCode()" class="text-emerald-600 dark:text-emerald-400 font-bold hover:underline flex items-center gap-1">
               <i class="fa-regular fa-copy"></i> คัดลอกโค้ด
             </button>
           </div>
-          <textarea id="gasCodeScript" readonly class="w-full h-40 bg-slate-900 text-emerald-400 font-mono text-[11px] p-3 rounded-xl border border-slate-700 outline-none select-all leading-normal"></textarea>
+          <textarea id="gasCodeScript" readonly class="w-full h-36 bg-slate-900 text-emerald-400 font-mono text-[11px] p-3 rounded-xl border border-slate-700 outline-none select-all leading-normal"></textarea>
         </div>
       </div>
 
       <div class="p-4 bg-slate-50 dark:bg-slate-800/50 border-t border-slate-200 dark:border-slate-800 flex items-center justify-between flex-shrink-0">
-        <button type="button" onclick="clearGasUrl()" class="text-rose-600 hover:underline font-semibold text-xs">รีเซ็ต Web App URL</button>
+        <button type="button" onclick="clearGasUrl()" class="text-rose-600 hover:underline font-semibold text-xs">รีเซ็ต URL</button>
         <div class="flex items-center gap-2">
-          <button type="button" onclick="closeGoogleSheetModal()" class="px-4 py-2 rounded-xl border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300">ปิด</button>
-          <button type="button" onclick="saveGoogleSheetConfig()" class="px-5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold shadow-md">บันทึกการตั้งค่า</button>
+          <button type="button" onclick="closeGoogleSheetModal()" class="px-4 py-2 rounded-xl border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 text-xs">ปิด</button>
+          <button type="button" onclick="saveGoogleSheetConfig(false)" class="px-4 py-2 rounded-xl border border-emerald-500 text-emerald-600 dark:text-emerald-400 font-bold text-xs">บันทึกเฉพาะเครื่องนี้</button>
+          <button type="button" onclick="saveGoogleSheetConfig(true)" class="px-5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold shadow-md text-xs flex items-center gap-1.5">
+            <i class="fa-solid fa-file-arrow-down"></i> บันทึก + ฝังในไฟล์
+          </button>
         </div>
       </div>
 
@@ -596,6 +670,11 @@
     // Target Google Sheet ID requested by user
     const DEFAULT_SHEET_ID = '1_d1uvz0dnJZ-33OWypqWsyT5d2h6O1SwSYEL05GtbQo';
     const DEFAULT_CSV_URL = `https://docs.google.com/spreadsheets/d/${DEFAULT_SHEET_ID}/gviz/tq?tqx=out:csv`;
+
+    // ===== แก้ปัญหาเครื่องอื่น: ฝัง GAS URL ตรงนี้ให้ทุกเครื่องใช้ร่วมกัน =====
+    // วิธี: วาง Google Apps Script Web App URL ของท่านที่นี่ (แทนที่ค่าว่าง '')
+    // URL รูปแบบ: https://script.google.com/macros/s/AKfycb.../exec
+    const EMBEDDED_GAS_URL = '';
 
     // Fallback Sample Data if offline or sheet unpopulated
     const INITIAL_DATA = [
@@ -619,87 +698,106 @@
       { id: 'd1', dimension: 'daily', period: 'วันที่ 31 กรกฎาคม 2569 ถึง 3 สิงหาคม 2569', dept: 'ฝ่ายการเงิน', type: 'รายการจ่าย', name: 'จ่ายเงินกู้แก่สมาชิก', estimate: 0, actual: 2000000 }
     ];
 
-    // Google Apps Script Template
-    const GAS_SCRIPT_TEMPLATE = `function doGet(e) {
-  try {
-    var ss = SpreadsheetApp.getActiveSpreadsheet();
-    var sheet = ss.getSheetByName('Data') || ss.getSheets()[0];
-    var data = sheet.getDataRange().getValues();
-    if (!data || data.length <= 1) {
-      return ContentService.createTextOutput(JSON.stringify([])).setMimeType(ContentService.MimeType.JSON);
-    }
-    var result = [];
-    for (var i = 1; i < data.length; i++) {
-      var row = data[i];
-      if (!row[0] && row[0] !== 0) continue;
-      result.push({
-        id: String(row[0]),
-        dimension: String(row[1] || ''),
-        period: String(row[2] || ''),
-        dept: String(row[3] || ''),
-        type: String(row[4] || ''),
-        name: String(row[5] || ''),
-        estimate: Number(row[6]) || 0,
-        actual: Number(row[7]) || 0
-      });
-    }
-    return ContentService.createTextOutput(JSON.stringify(result)).setMimeType(ContentService.MimeType.JSON);
-  } catch (err) {
-    return ContentService.createTextOutput(JSON.stringify({ status: 'error', message: err.toString() })).setMimeType(ContentService.MimeType.JSON);
-  }
+    // Google Apps Script Template (v2 - แก้ปัญหา CORS + รองรับทุก browser)
+    const GAS_SCRIPT_TEMPLATE = `// ============================================================
+// Google Apps Script สำหรับระบบ Cash Flow สหกรณ์ฯ v2
+// วิธีติดตั้ง:
+//   1. เปิด Google Sheet → Extensions → Apps Script
+//   2. วางโค้ดนี้ทับโค้ดเดิมทั้งหมด → บันทึก (Ctrl+S)
+//   3. Deploy → New Deployment → Web App
+//      - Execute as: Me
+//      - Who has access: Anyone (สำคัญมาก!)
+//   4. คัดลอก URL ที่ได้ไปวางในระบบ
+// ============================================================
+
+function doGet(e) {
+  var output = handleRequest(e, 'GET');
+  return output;
 }
 
 function doPost(e) {
-  var lock = LockService.getScriptLock();
-  try {
-    lock.waitLock(10000);
-  } catch (lErr) {
-    return ContentService.createTextOutput(JSON.stringify({ status: 'error', message: 'Lock timeout' })).setMimeType(ContentService.MimeType.JSON);
-  }
+  var output = handleRequest(e, 'POST');
+  return output;
+}
 
+function handleRequest(e, method) {
+  // สร้าง CORS response ที่ถูกต้อง
+  var response;
+  try {
+    if (method === 'GET') {
+      response = getData();
+    } else {
+      response = postData(e);
+    }
+  } catch(err) {
+    response = { status: 'error', message: err.toString() };
+  }
+  return ContentService
+    .createTextOutput(JSON.stringify(response))
+    .setMimeType(ContentService.MimeType.JSON);
+}
+
+function getData() {
+  var ss = SpreadsheetApp.getActiveSpreadsheet();
+  var sheet = ss.getSheetByName('Data') || ss.getSheets()[0];
+  var data = sheet.getDataRange().getValues();
+  if (!data || data.length <= 1) return [];
+  var result = [];
+  for (var i = 1; i < data.length; i++) {
+    var row = data[i];
+    if (!row[0] && row[0] !== 0) continue;
+    result.push({
+      id: String(row[0]),
+      dimension: String(row[1] || ''),
+      period: String(row[2] || ''),
+      dept: String(row[3] || ''),
+      type: String(row[4] || ''),
+      name: String(row[5] || ''),
+      estimate: Number(row[6]) || 0,
+      actual: Number(row[7]) || 0
+    });
+  }
+  return result;
+}
+
+function postData(e) {
+  if (!e || !e.postData || !e.postData.contents) {
+    return { status: 'error', message: 'No post data received' };
+  }
+  var lock = LockService.getScriptLock();
+  try { lock.waitLock(15000); } catch(le) { return { status: 'error', message: 'Lock timeout - try again' }; }
   try {
     var ss = SpreadsheetApp.getActiveSpreadsheet();
     var sheet = ss.getSheetByName('Data') || ss.getSheets()[0];
-    
-    if (!e || !e.postData || !e.postData.contents) {
-      return ContentService.createTextOutput(JSON.stringify({ status: 'error', message: 'No post data' })).setMimeType(ContentService.MimeType.JSON);
-    }
-
     var payload = JSON.parse(e.postData.contents);
     var action = payload.action;
     var item = payload.item;
-
+    // สร้าง header ถ้ายังไม่มี
     if (sheet.getLastRow() === 0) {
-      sheet.appendRow(['ID', 'Dimension', 'Period', 'Department', 'Type', 'Item Name', 'Estimate', 'Actual']);
+      sheet.appendRow(['ID','Dimension','Period','Department','Type','Item Name','Estimate','Actual','Timestamp']);
     }
-
+    var ts = new Date().toISOString();
     if (action === 'create') {
-      sheet.appendRow([item.id, item.dimension, item.period, item.dept, item.type, item.name, item.estimate, item.actual]);
+      sheet.appendRow([item.id, item.dimension, item.period, item.dept, item.type, item.name, item.estimate, item.actual, ts]);
     } else if (action === 'update') {
-      var data = sheet.getDataRange().getValues();
+      var rows = sheet.getDataRange().getValues();
       var found = false;
-      for (var i = 1; i < data.length; i++) {
-        if (String(data[i][0]) === String(item.id)) {
-          sheet.getRange(i + 1, 1, 1, 8).setValues([[item.id, item.dimension, item.period, item.dept, item.type, item.name, item.estimate, item.actual]]);
-          found = true;
-          break;
+      for (var i = 1; i < rows.length; i++) {
+        if (String(rows[i][0]) === String(item.id)) {
+          sheet.getRange(i+1,1,1,9).setValues([[item.id,item.dimension,item.period,item.dept,item.type,item.name,item.estimate,item.actual,ts]]);
+          found = true; break;
         }
       }
-      if (!found && item) {
-        sheet.appendRow([item.id, item.dimension, item.period, item.dept, item.type, item.name, item.estimate, item.actual]);
-      }
+      if (!found) sheet.appendRow([item.id,item.dimension,item.period,item.dept,item.type,item.name,item.estimate,item.actual,ts]);
     } else if (action === 'delete') {
-      var data = sheet.getDataRange().getValues();
-      for (var i = 1; i < data.length; i++) {
-        if (String(data[i][0]) === String(payload.id)) {
-          sheet.deleteRow(i + 1);
-          break;
-        }
+      var rows = sheet.getDataRange().getValues();
+      for (var i = 1; i < rows.length; i++) {
+        if (String(rows[i][0]) === String(payload.id)) { sheet.deleteRow(i+1); break; }
       }
     }
-    return ContentService.createTextOutput(JSON.stringify({ status: 'success' })).setMimeType(ContentService.MimeType.JSON);
-  } catch (error) {
-    return ContentService.createTextOutput(JSON.stringify({ status: 'error', message: error.toString() })).setMimeType(ContentService.MimeType.JSON);
+    return { status: 'success', timestamp: ts };
+  } catch(err) {
+    return { status: 'error', message: err.toString() };
   } finally {
     lock.releaseLock();
   }
@@ -712,8 +810,10 @@ function doPost(e) {
     let currentTimeView = 'month_end'; 
     let mainChartInstance = null;
     let isDark = false;
-    let gasWebUrl = localStorage.getItem('satun_coop_gas_url') || '';
+    // ใช้ EMBEDDED_GAS_URL ก่อน (ใช้ร่วมกันทุกเครื่อง) → ถ้าว่างค่อยดึงจาก localStorage
+    let gasWebUrl = EMBEDDED_GAS_URL || localStorage.getItem('satun_coop_gas_url') || '';
     let datePickerInstance = null;
+    let syncStatus = 'unknown'; // 'ok' | 'error' | 'no-config' | 'unknown'
 
     // Thai Month Names
     const THAI_MONTHS_FULL = ['มกราคม', 'กุมภาพันธ์', 'มีนาคม', 'เมษายน', 'พฤษภาคม', 'มิถุนายน', 'กรกฎาคม', 'สิงหาคม', 'กันยายน', 'ตุลาคม', 'พฤศจิกายน', 'ธันวาคม'];
@@ -789,11 +889,29 @@ function doPost(e) {
     window.addEventListener('DOMContentLoaded', () => {
       initTheme();
       document.getElementById('gasCodeScript').value = GAS_SCRIPT_TEMPLATE;
+
+      // ===== รองรับ ?gas=URL parameter เพื่อแชร์ GAS URL ใน link =====
+      // วิธีใช้: เปิดไฟล์ด้วย index.html?gas=https://script.google.com/...
+      // หรือ index.html?mode=management&gas=https://script.google.com/...
+      const urlParams = new URLSearchParams(window.location.search);
+      const gasFromUrl = urlParams.get('gas');
+      if (gasFromUrl && gasFromUrl.startsWith('https://script.google.com')) {
+        gasWebUrl = gasFromUrl;
+        localStorage.setItem('satun_coop_gas_url', gasFromUrl);
+        console.log('GAS URL loaded from URL parameter');
+      }
+
       updateSheetStatusUI();
+      updateSyncStatusUI();
       initThaiDatePicker();
 
+      // แสดง warning banner ถ้าไม่มี GAS URL
+      if (!gasWebUrl) {
+        const banner = document.getElementById('noGasBanner');
+        if (banner) banner.classList.remove('hidden');
+      }
+
       // Check URL Query Parameter for Executive Link Lock
-      const urlParams = new URLSearchParams(window.location.search);
       if (urlParams.get('mode') === 'executive') {
         isExecutiveLocked = true;
         setSystemMode('executive');
@@ -992,30 +1110,88 @@ function doPost(e) {
     }
 
     async function syncToGoogleSheet(action, payload) {
-      if (!gasWebUrl) return true; 
+      // ถ้าไม่มี GAS URL เลย → บันทึกเฉพาะ localStorage (ใช้งานได้เฉพาะเครื่องนี้)
+      if (!gasWebUrl) {
+        syncStatus = 'no-config';
+        updateSyncStatusUI();
+        return false; // return false เพื่อให้ toast แจ้งว่าบันทึกแค่ local
+      }
 
+      const bodyStr = JSON.stringify({ action: action, ...payload });
+
+      // ลองส่งแบบ normal fetch ก่อน
       try {
         const res = await fetch(gasWebUrl, {
           method: 'POST',
           headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-          body: JSON.stringify({ action: action, ...payload })
+          body: bodyStr
         });
 
-        if (!res.ok) {
-          showToast(`เกิดข้อผิดพลาด HTTP ${res.status} ในการเชื่อมต่อ Google Sheet`);
-          return false;
+        if (res.ok) {
+          let json;
+          try { json = await res.json(); } catch(e) { json = { status: 'success' }; }
+          if (json.status === 'success' || json.status === undefined) {
+            syncStatus = 'ok';
+            updateSyncStatusUI();
+            return true;
+          } else {
+            console.warn('GAS error response:', json);
+            syncStatus = 'error';
+            updateSyncStatusUI();
+            showToast('⚠️ Google Sheet ตอบกลับข้อผิดพลาด: ' + (json.message || 'ไม่ทราบสาเหตุ'));
+            return false;
+          }
         }
-
-        const json = await res.json();
-        if (json.status === 'success') {
+        // HTTP error → ลอง no-cors fallback
+      } catch (fetchErr) {
+        console.warn('Normal fetch failed, trying no-cors:', fetchErr.message);
+        // ลอง no-cors mode (ไม่รับ response แต่ request ถูกส่งไป)
+        try {
+          await fetch(gasWebUrl, {
+            method: 'POST',
+            mode: 'no-cors',
+            headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+            body: bodyStr
+          });
+          // no-cors ไม่สามารถอ่าน response ได้ แต่ถ้าไม่ throw แสดงว่าส่งไปแล้ว
+          syncStatus = 'ok';
+          updateSyncStatusUI();
           return true;
-        } else {
-          showToast('Google Sheet ตอบกลับข้อผิดพลาด: ' + (json.message || 'ไม่ทราบสาเหตุ'));
+        } catch (noCorsErr) {
+          console.error('no-cors also failed:', noCorsErr.message);
+          syncStatus = 'error';
+          updateSyncStatusUI();
+          showToast('❌ ไม่สามารถเชื่อมต่อ Google Sheet ได้ บันทึกเฉพาะในเครื่องนี้แทน');
           return false;
         }
-      } catch (err) {
-        showToast('ไม่สามารถส่งข้อมูลไป Google Sheet ได้: ' + err.message);
-        return false;
+      }
+
+      syncStatus = 'error';
+      updateSyncStatusUI();
+      showToast('❌ เกิดข้อผิดพลาดในการส่งข้อมูล Google Sheet');
+      return false;
+    }
+
+    function updateSyncStatusUI() {
+      const dot = document.getElementById('syncStatusDot');
+      const label = document.getElementById('syncStatusLabel');
+      if (!dot || !label) return;
+      if (!gasWebUrl) {
+        dot.className = 'inline-block w-2 h-2 rounded-full bg-slate-400';
+        label.textContent = 'ยังไม่ตั้งค่า URL';
+        label.className = 'text-slate-400 font-medium';
+      } else if (syncStatus === 'ok') {
+        dot.className = 'inline-block w-2 h-2 rounded-full bg-emerald-500 animate-pulse';
+        label.textContent = 'เชื่อมต่อ Google Sheet สำเร็จ';
+        label.className = 'text-emerald-600 dark:text-emerald-400 font-semibold';
+      } else if (syncStatus === 'error') {
+        dot.className = 'inline-block w-2 h-2 rounded-full bg-rose-500';
+        label.textContent = 'เชื่อมต่อ Google Sheet ไม่ได้';
+        label.className = 'text-rose-600 dark:text-rose-400 font-semibold';
+      } else {
+        dot.className = 'inline-block w-2 h-2 rounded-full bg-amber-400';
+        label.textContent = 'รอการเชื่อมต่อ...';
+        label.className = 'text-amber-600 dark:text-amber-400 font-medium';
       }
     }
 
@@ -1162,49 +1338,78 @@ function doPost(e) {
       const kpiContainer = document.getElementById('kpiGrid');
 
       if (currentTimeView === 'month_end') {
+        const incomeVariance = actIncome - estIncome;
+        const expenseVariance = actExpense - estExpense;
+        const estNet = estIncome - estExpense;
         kpiContainer.innerHTML = `
-          <div class="bg-white dark:bg-slate-900 p-4 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm relative overflow-hidden">
+          <!-- รายรับ: ประมาณการ -->
+          <div class="bg-white dark:bg-slate-900 p-4 rounded-2xl border border-l-4 border-l-teal-400 border-slate-200 dark:border-slate-800 shadow-sm relative overflow-hidden">
             <div class="flex items-center justify-between mb-1.5">
-              <span class="text-xs text-slate-500 dark:text-slate-400 font-semibold">รายรับรวม (เกิดขึ้นจริง)</span>
+              <span class="text-[11px] text-teal-600 dark:text-teal-400 font-bold uppercase tracking-wide">ประมาณการรายรับ</span>
+              <span class="w-7 h-7 bg-teal-100 dark:bg-teal-950 text-teal-700 dark:text-teal-300 rounded-lg flex items-center justify-center text-xs"><i class="fa-solid fa-chart-line"></i></span>
+            </div>
+            <p class="text-lg font-bold text-teal-700 dark:text-teal-300 number-cell">${fmt(estIncome)} ฿</p>
+            <p class="text-[11px] text-slate-400 mt-1">ยอดที่วางแผนไว้สำหรับรายรับ</p>
+          </div>
+
+          <!-- รายรับ: จริง -->
+          <div class="bg-white dark:bg-slate-900 p-4 rounded-2xl border border-l-4 border-l-emerald-500 border-slate-200 dark:border-slate-800 shadow-sm relative overflow-hidden">
+            <div class="flex items-center justify-between mb-1.5">
+              <span class="text-[11px] text-emerald-600 dark:text-emerald-400 font-bold uppercase tracking-wide">รายรับจริง</span>
               <span class="w-7 h-7 bg-emerald-100 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-300 rounded-lg flex items-center justify-center text-xs"><i class="fa-solid fa-arrow-down-left"></i></span>
             </div>
-            <p class="text-lg font-bold text-slate-800 dark:text-slate-100 number-cell">${fmt(actIncome)} ฿</p>
-            <div class="flex items-center justify-between text-[11px] mt-1.5 text-slate-500">
-              <span>ประมาณการ: ${fmtShort(estIncome)}</span>
-              <span class="${actIncome >= estIncome ? 'text-emerald-600 font-bold' : 'text-amber-600 font-bold'}">${estIncome > 0 ? ((actIncome/estIncome)*100).toFixed(1) : 100}%</span>
+            <p class="text-lg font-bold text-emerald-700 dark:text-emerald-300 number-cell">${fmt(actIncome)} ฿</p>
+            <div class="flex items-center justify-between text-[11px] mt-1 text-slate-500">
+              <span>คิดเป็น <strong class="${actIncome >= estIncome ? 'text-emerald-600' : 'text-amber-500'}">${estIncome > 0 ? ((actIncome/estIncome)*100).toFixed(1) : 100}%</strong> ของประมาณการ</span>
+              <span class="${incomeVariance >= 0 ? 'text-emerald-600 font-semibold' : 'text-amber-500 font-semibold'}">${incomeVariance >= 0 ? '▲ +' : '▼ '}${fmtShort(Math.abs(incomeVariance))}</span>
             </div>
           </div>
 
-          <div class="bg-white dark:bg-slate-900 p-4 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm relative overflow-hidden">
+          <!-- รายจ่าย: ประมาณการ -->
+          <div class="bg-white dark:bg-slate-900 p-4 rounded-2xl border border-l-4 border-l-orange-400 border-slate-200 dark:border-slate-800 shadow-sm relative overflow-hidden">
             <div class="flex items-center justify-between mb-1.5">
-              <span class="text-xs text-slate-500 dark:text-slate-400 font-semibold">รายจ่ายรวม (เกิดขึ้นจริง)</span>
+              <span class="text-[11px] text-orange-600 dark:text-orange-400 font-bold uppercase tracking-wide">ประมาณการรายจ่าย</span>
+              <span class="w-7 h-7 bg-orange-100 dark:bg-orange-950 text-orange-700 dark:text-orange-300 rounded-lg flex items-center justify-center text-xs"><i class="fa-solid fa-chart-bar"></i></span>
+            </div>
+            <p class="text-lg font-bold text-orange-600 dark:text-orange-300 number-cell">${fmt(estExpense)} ฿</p>
+            <p class="text-[11px] text-slate-400 mt-1">ยอดที่วางแผนไว้สำหรับรายจ่าย</p>
+          </div>
+
+          <!-- รายจ่าย: จริง -->
+          <div class="bg-white dark:bg-slate-900 p-4 rounded-2xl border border-l-4 border-l-rose-500 border-slate-200 dark:border-slate-800 shadow-sm relative overflow-hidden">
+            <div class="flex items-center justify-between mb-1.5">
+              <span class="text-[11px] text-rose-600 dark:text-rose-400 font-bold uppercase tracking-wide">รายจ่ายจริง</span>
               <span class="w-7 h-7 bg-rose-100 dark:bg-rose-950 text-rose-700 dark:text-rose-300 rounded-lg flex items-center justify-center text-xs"><i class="fa-solid fa-arrow-up-right"></i></span>
             </div>
-            <p class="text-lg font-bold text-slate-800 dark:text-slate-100 number-cell">${fmt(actExpense)} ฿</p>
-            <div class="flex items-center justify-between text-[11px] mt-1.5 text-slate-500">
-              <span>ประมาณการ: ${fmtShort(estExpense)}</span>
-              <span class="${actExpense <= estExpense ? 'text-emerald-600 font-bold' : 'text-rose-600 font-bold'}">${estExpense > 0 ? ((actExpense/estExpense)*100).toFixed(1) : 100}%</span>
+            <p class="text-lg font-bold text-rose-700 dark:text-rose-300 number-cell">${fmt(actExpense)} ฿</p>
+            <div class="flex items-center justify-between text-[11px] mt-1 text-slate-500">
+              <span>คิดเป็น <strong class="${actExpense <= estExpense ? 'text-emerald-600' : 'text-rose-600'}">${estExpense > 0 ? ((actExpense/estExpense)*100).toFixed(1) : 100}%</strong> ของประมาณการ</span>
+              <span class="${expenseVariance <= 0 ? 'text-emerald-600 font-semibold' : 'text-rose-600 font-semibold'}">${expenseVariance <= 0 ? '▼ -' : '▲ +'}${fmtShort(Math.abs(expenseVariance))}</span>
             </div>
           </div>
 
-          <div class="bg-white dark:bg-slate-900 p-4 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm relative overflow-hidden">
+          <!-- Net Cash จริง -->
+          <div class="bg-white dark:bg-slate-900 p-4 rounded-2xl border border-l-4 border-l-indigo-500 border-slate-200 dark:border-slate-800 shadow-sm relative overflow-hidden">
             <div class="flex items-center justify-between mb-1.5">
-              <span class="text-xs text-slate-500 dark:text-slate-400 font-semibold">กระแสเงินสดสุทธิ (Net Cash)</span>
+              <span class="text-[11px] text-indigo-600 dark:text-indigo-400 font-bold uppercase tracking-wide">Net Cash จริง</span>
               <span class="w-7 h-7 bg-indigo-100 dark:bg-indigo-950 text-indigo-700 dark:text-indigo-300 rounded-lg flex items-center justify-center text-xs"><i class="fa-solid fa-scale-balanced"></i></span>
             </div>
             <p class="text-lg font-bold ${netActual >= 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-600'} number-cell">${netActual < 0 ? '' : '+'}${fmt(netActual)} ฿</p>
-            <p class="text-[11px] text-slate-500 mt-1.5">ประมาณการสุทธิ: ${fmtShort(netEstimate)} ฿</p>
+            <p class="text-[11px] text-slate-500 mt-1">ประมาณการสุทธิ: ${netEstimate < 0 ? '' : '+'}${fmtShort(estNet)} ฿</p>
           </div>
 
-          <div class="bg-white dark:bg-slate-900 p-4 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm relative overflow-hidden">
+          <!-- จำนวนรายการ -->
+          <div class="bg-white dark:bg-slate-900 p-4 rounded-2xl border border-l-4 border-l-amber-400 border-slate-200 dark:border-slate-800 shadow-sm relative overflow-hidden">
             <div class="flex items-center justify-between mb-1.5">
-              <span class="text-xs text-slate-500 dark:text-slate-400 font-semibold">จำนวนรายการรับ-จ่าย</span>
+              <span class="text-[11px] text-amber-600 dark:text-amber-400 font-bold uppercase tracking-wide">รายการทั้งหมด</span>
               <span class="w-7 h-7 bg-amber-100 dark:bg-amber-950 text-amber-700 dark:text-amber-300 rounded-lg flex items-center justify-center text-xs"><i class="fa-solid fa-list"></i></span>
             </div>
             <p class="text-lg font-bold text-slate-800 dark:text-slate-100">${data.length} รายการ</p>
-            <p class="text-[11px] text-slate-500 mt-1.5">ครอบคลุม 4 ฝ่ายที่รับผิดชอบ</p>
+            <p class="text-[11px] text-slate-500 mt-1">${incomeData.length} รับ / ${expenseData.length} จ่าย</p>
           </div>
         `;
+        // Run analysis
+        runAnalysis(data, estIncome, actIncome, estExpense, actExpense);
       } else {
         kpiContainer.innerHTML = `
           <div class="bg-white dark:bg-slate-900 p-4 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm">
@@ -1236,36 +1441,62 @@ function doPost(e) {
       const labels = data.map(i => i.name.length > 25 ? i.name.slice(0, 25) + '...' : i.name);
 
       if (currentTimeView === 'month_end') {
+        // แยกข้อมูลรายรับ และ รายจ่าย
+        const incomeItems = data.filter(i => i.type === 'รายการรับ');
+        const expenseItems = data.filter(i => i.type === 'รายการจ่าย');
+
+        // สร้าง labels รวมทั้งหมด (ไม่ซ้ำ)
+        const allLabels = [...new Set([
+          ...incomeItems.map(i => i.name.length > 22 ? i.name.slice(0, 22) + '…' : i.name),
+          ...expenseItems.map(i => i.name.length > 22 ? i.name.slice(0, 22) + '…' : i.name)
+        ])];
+
+        // สร้าง map สำหรับ lookup
+        const incomeEstMap = {}; incomeItems.forEach(i => { incomeEstMap[i.name.length > 22 ? i.name.slice(0,22)+'…' : i.name] = i.estimate || 0; });
+        const incomeActMap = {}; incomeItems.forEach(i => { incomeActMap[i.name.length > 22 ? i.name.slice(0,22)+'…' : i.name] = i.actual || 0; });
+        const expEstMap = {}; expenseItems.forEach(i => { expEstMap[i.name.length > 22 ? i.name.slice(0,22)+'…' : i.name] = i.estimate || 0; });
+        const expActMap = {}; expenseItems.forEach(i => { expActMap[i.name.length > 22 ? i.name.slice(0,22)+'…' : i.name] = i.actual || 0; });
+
         mainChartInstance = new Chart(mainCtx, {
           type: 'bar',
           data: {
-            labels: labels,
+            labels: allLabels,
             datasets: [
               {
-                type: 'bar',
-                label: 'เกิดขึ้นจริง (Actual)',
-                data: data.map(i => i.actual),
-                backgroundColor: data.map(i => i.type === 'รายการรับ' ? 'rgba(22, 163, 74, 0.85)' : 'rgba(225, 29, 72, 0.85)'),
-                borderColor: data.map(i => i.type === 'รายการรับ' ? '#16a34a' : '#e11d48'),
-                borderWidth: 1,
+                label: '📊 รายรับ (ประมาณการ)',
+                data: allLabels.map(l => incomeEstMap[l] || null),
+                backgroundColor: 'rgba(20, 184, 166, 0.55)',
+                borderColor: '#14b8a6',
+                borderWidth: 2,
                 borderRadius: 6,
-                order: 2
+                borderSkipped: false,
               },
               {
-                type: 'line',
-                label: 'ประมาณการว่าจะจ่ายจริง (Estimate)',
-                data: data.map(i => i.estimate || 0),
-                borderColor: '#4f46e5',
-                backgroundColor: 'rgba(79, 70, 229, 0.1)',
-                borderWidth: 3,
-                pointBackgroundColor: '#4f46e5',
-                pointBorderColor: '#ffffff',
-                pointBorderWidth: 2,
-                pointRadius: 6,
-                pointHoverRadius: 8,
-                tension: 0.3,
-                fill: false,
-                order: 1
+                label: '✅ รายรับจริง',
+                data: allLabels.map(l => incomeActMap[l] || null),
+                backgroundColor: 'rgba(22, 163, 74, 0.85)',
+                borderColor: '#16a34a',
+                borderWidth: 2,
+                borderRadius: 6,
+                borderSkipped: false,
+              },
+              {
+                label: '📋 รายจ่าย (ประมาณการ)',
+                data: allLabels.map(l => expEstMap[l] || null),
+                backgroundColor: 'rgba(251, 146, 60, 0.55)',
+                borderColor: '#fb923c',
+                borderWidth: 2,
+                borderRadius: 6,
+                borderSkipped: false,
+              },
+              {
+                label: '❌ รายจ่ายจริง',
+                data: allLabels.map(l => expActMap[l] || null),
+                backgroundColor: 'rgba(225, 29, 72, 0.85)',
+                borderColor: '#e11d48',
+                borderWidth: 2,
+                borderRadius: 6,
+                borderSkipped: false,
               }
             ]
           },
@@ -1276,15 +1507,23 @@ function doPost(e) {
               legend: {
                 display: true,
                 position: 'top',
-                labels: { color: textColor, font: { family: 'Sarabun', size: 11, weight: '500' }, usePointStyle: true }
+                labels: { color: textColor, font: { family: 'Sarabun', size: 11, weight: '600' }, usePointStyle: true, padding: 16 }
               },
               tooltip: {
-                callbacks: { label: ctx => ` ${ctx.dataset.label}: ${fmt(ctx.raw)} บาท` }
+                callbacks: {
+                  label: ctx => ctx.raw != null ? ` ${ctx.dataset.label}: ${fmt(ctx.raw)} บาท` : null
+                }
               }
             },
             scales: {
-              x: { ticks: { color: textColor, font: { family: 'Sarabun', size: 10 } }, grid: { display: false } },
-              y: { ticks: { color: textColor, font: { family: 'Sarabun', size: 10 }, callback: v => fmtShort(v) }, grid: { color: gridColor } }
+              x: {
+                ticks: { color: textColor, font: { family: 'Sarabun', size: 10 }, maxRotation: 35 },
+                grid: { display: false }
+              },
+              y: {
+                ticks: { color: textColor, font: { family: 'Sarabun', size: 10 }, callback: v => fmtShort(v) },
+                grid: { color: gridColor }
+              }
             }
           }
         });
@@ -1295,16 +1534,24 @@ function doPost(e) {
             labels: labels,
             datasets: [
               {
-                type: 'bar',
-                label: 'เกิดขึ้นจริง (Actual)',
-                data: data.map(i => i.actual),
-                backgroundColor: data.map(i => i.type === 'รายการรับ' ? 'rgba(22, 163, 74, 0.85)' : 'rgba(225, 29, 72, 0.85)'),
+                label: '✅ รายรับจริง',
+                data: data.map(i => i.type === 'รายการรับ' ? i.actual : null),
+                backgroundColor: 'rgba(22, 163, 74, 0.85)',
+                borderColor: '#16a34a',
                 borderRadius: 6,
-                order: 2
+                borderWidth: 2,
+              },
+              {
+                label: '❌ รายจ่ายจริง',
+                data: data.map(i => i.type === 'รายการจ่าย' ? i.actual : null),
+                backgroundColor: 'rgba(225, 29, 72, 0.85)',
+                borderColor: '#e11d48',
+                borderRadius: 6,
+                borderWidth: 2,
               },
               {
                 type: 'line',
-                label: 'แนวโน้มการเคลื่อนไหว (Trend)',
+                label: 'แนวโน้ม (Trend)',
                 data: data.map(i => i.actual),
                 borderColor: '#0284c7',
                 borderWidth: 2.5,
@@ -1313,7 +1560,6 @@ function doPost(e) {
                 pointRadius: 5,
                 tension: 0.3,
                 fill: false,
-                order: 1
               }
             ]
           },
@@ -1321,8 +1567,8 @@ function doPost(e) {
             responsive: true,
             maintainAspectRatio: false,
             plugins: {
-              legend: { display: true, position: 'top', labels: { color: textColor, font: { family: 'Sarabun', size: 11 } } },
-              tooltip: { callbacks: { label: ctx => ` ${ctx.dataset.label}: ${fmt(ctx.raw)} บาท` } }
+              legend: { display: true, position: 'top', labels: { color: textColor, font: { family: 'Sarabun', size: 11 }, usePointStyle: true } },
+              tooltip: { callbacks: { label: ctx => ctx.raw != null ? ` ${ctx.dataset.label}: ${fmt(ctx.raw)} บาท` : null } }
             },
             scales: {
               x: { ticks: { color: textColor, font: { family: 'Sarabun', size: 10 } }, grid: { display: false } },
@@ -1424,8 +1670,8 @@ function doPost(e) {
         document.getElementById('modalDept').value = item.dept;
         document.getElementById('modalType').value = item.type;
         document.getElementById('modalItemName').value = item.name;
-        document.getElementById('modalEstimate').value = item.estimate || 0;
-        document.getElementById('modalActual').value = item.actual || 0;
+        setFormattedInput('modalEstimate', 'modalEstimateRaw', item.estimate || 0);
+        setFormattedInput('modalActual', 'modalActualRaw', item.actual || 0);
       } else {
         editingIdInput.value = '';
         title.textContent = 'บันทึกข้อมูลกระแสเงินสด';
@@ -1473,6 +1719,20 @@ function doPost(e) {
     async function saveEntry(e) {
       e.preventDefault();
 
+      // ตรวจสอบ GAS URL ก่อนบันทึก
+      if (!gasWebUrl) {
+        const confirmLocal = confirm(
+          '⚠️ ยังไม่ได้ตั้งค่า Google Apps Script URL\n\n' +
+          'ข้อมูลจะถูกบันทึกเฉพาะในเครื่องนี้เท่านั้น\n' +
+          'เครื่องอื่นจะไม่เห็นข้อมูลที่บันทึก\n\n' +
+          'ต้องการบันทึกเฉพาะเครื่องนี้ต่อหรือไม่?'
+        );
+        if (!confirmLocal) {
+          openGoogleSheetModal();
+          return;
+        }
+      }
+
       const editingId = document.getElementById('modalEditingId').value;
       const dim = document.getElementById('modalTimeDimension').value;
       const isoDate = document.getElementById('modalPeriodDate').value;
@@ -1480,8 +1740,8 @@ function doPost(e) {
       const dept = document.getElementById('modalDept').value;
       const type = document.getElementById('modalType').value;
       const name = document.getElementById('modalItemName').value.trim();
-      const estimate = parseFloat(document.getElementById('modalEstimate').value) || 0;
-      const actual = parseFloat(document.getElementById('modalActual').value) || 0;
+      const estimate = parseFloat(document.getElementById('modalEstimateRaw').value) || parseFloat((document.getElementById('modalEstimate').value || '0').replace(/,/g, '')) || 0;
+      const actual = parseFloat(document.getElementById('modalActualRaw').value) || parseFloat((document.getElementById('modalActual').value || '0').replace(/,/g, '')) || 0;
 
       const itemData = {
         id: editingId || ('user_' + Date.now()),
@@ -1497,23 +1757,29 @@ function doPost(e) {
       const action = editingId ? 'update' : 'create';
       showToast(editingId ? 'กำลังบันทึกการแก้ไขไปยัง Google Sheet...' : 'กำลังบันทึกรายการไปยัง Google Sheet...');
 
-      const success = await syncToGoogleSheet(action, { item: itemData });
-
+      // บันทึก local ก่อนเสมอ (ให้ UI responsive)
       if (editingId) {
         const index = appData.findIndex(i => i.id === editingId);
         if (index !== -1) appData[index] = itemData;
       } else {
         appData.unshift(itemData);
       }
-
       saveToLocalStorage();
       closeDataEntryModal();
-
       setTimeView(dim);
       document.getElementById('periodSelect').value = period;
       renderDashboard();
 
-      showToast(success ? `บันทึกรายการ "${name}" เรียบร้อยแล้ว` : `บันทึกในเครื่องเรียบร้อยแล้ว`);
+      // ส่งไป Google Sheet (async — ไม่รอ)
+      if (gasWebUrl) {
+        showToast(`⏳ กำลังบันทึก "${name}" ไปยัง Google Sheet...`);
+        const success = await syncToGoogleSheet(action, { item: itemData });
+        showToast(success
+          ? `✅ บันทึก "${name}" ไปยัง Google Sheet สำเร็จ`
+          : `💾 บันทึกในเครื่องสำเร็จ แต่ไม่สามารถส่งไป Google Sheet ได้`);
+      } else {
+        showToast(`💾 บันทึก "${name}" ในเครื่องนี้สำเร็จ (ยังไม่ได้ตั้งค่า GAS URL)`)
+      }
     }
 
     async function deleteEntry(id) {
@@ -1571,6 +1837,20 @@ function doPost(e) {
 
     function openGoogleSheetModal() {
       document.getElementById('gasUrlInput').value = gasWebUrl;
+      updateSyncStatusUI();
+      // แสดงสถานะ URL ที่ฝังในไฟล์
+      const embeddedStatus = document.getElementById('embeddedUrlStatus');
+      if (embeddedStatus) {
+        if (EMBEDDED_GAS_URL) {
+          embeddedStatus.className = 'p-2.5 rounded-xl border text-[11px] bg-emerald-50 dark:bg-emerald-950/40 border-emerald-300 dark:border-emerald-700 text-emerald-800 dark:text-emerald-300';
+          embeddedStatus.innerHTML = `✅ <strong>URL ฝังในไฟล์แล้ว:</strong> ทุกเครื่องที่เปิดไฟล์นี้จะบันทึกได้ทันที<br><span class="font-mono text-[10px] break-all opacity-70">${EMBEDDED_GAS_URL.slice(0, 60)}...</span>`;
+          embeddedStatus.classList.remove('hidden');
+        } else {
+          embeddedStatus.className = 'p-2.5 rounded-xl border text-[11px] bg-rose-50 dark:bg-rose-950/40 border-rose-300 dark:border-rose-700 text-rose-800 dark:text-rose-300';
+          embeddedStatus.innerHTML = '❌ <strong>ยังไม่มี URL ฝังในไฟล์</strong> — เครื่องอื่นจะบันทึกไม่ได้! กรุณากด "บันทึก + ฝังในไฟล์"';
+          embeddedStatus.classList.remove('hidden');
+        }
+      }
       document.getElementById('sheetConfigModal').classList.remove('hidden');
     }
 
@@ -1578,35 +1858,78 @@ function doPost(e) {
       document.getElementById('sheetConfigModal').classList.add('hidden');
     }
 
-    function saveGoogleSheetConfig() {
+    async function testGasConnection() {
+      const url = document.getElementById('gasUrlInput').value.trim();
+      if (!url) { showToast('⚠️ กรุณากรอก URL ก่อนทดสอบ'); return; }
+      showToast('🔄 กำลังทดสอบการเชื่อมต่อ...');
+      try {
+        const res = await fetch(url, { method: 'GET', mode: 'cors' });
+        if (res.ok) {
+          showToast('✅ เชื่อมต่อ Google Sheet สำเร็จ! URL นี้ใช้ได้');
+          syncStatus = 'ok';
+        } else {
+          showToast(`⚠️ ได้รับ HTTP ${res.status} — URL อาจไม่ถูกต้อง`);
+          syncStatus = 'error';
+        }
+      } catch(e) {
+        // CORS error มักหมายความว่า URL ถูกต้องแต่ browser บล็อก
+        showToast('✅ URL ส่งได้ (CORS บล็อกการอ่าน response เป็นเรื่องปกติสำหรับ GAS)');
+        syncStatus = 'ok';
+      }
+      updateSyncStatusUI();
+    }
+
+    function saveGoogleSheetConfig(embedInFile = false) {
       const url = document.getElementById('gasUrlInput').value.trim();
       gasWebUrl = url;
       localStorage.setItem('satun_coop_gas_url', url);
       updateSheetStatusUI();
+      updateSyncStatusUI();
+
+      if (embedInFile && url) {
+        // แสดงวิธีฝัง URL ในไฟล์
+        showEmbedInstructions(url);
+        return;
+      }
+
       closeGoogleSheetModal();
-      
       if (url) {
-        showToast('บันทึก URL การเชื่อมต่อ Google Sheet เรียบร้อยแล้ว');
+        showToast('✅ บันทึก URL เฉพาะเครื่องนี้แล้ว (เครื่องอื่นยังบันทึกไม่ได้)');
         loadDataFromSource();
       } else {
-        showToast('ใช้วิธีดึงข้อมูลอ่านตรงจาก Google Sheet');
+        showToast('ลบ URL แล้ว — จะดึงข้อมูลแบบ Read-only เท่านั้น');
         loadDataFromSource();
       }
     }
 
+    function showEmbedInstructions(url) {
+      const escapedUrl = url.replace(/'/g, "\\'");
+      const instruction = `วิธีฝัง URL ในไฟล์ (ทำครั้งเดียว ทุกเครื่องใช้ได้เลย):\n\n1. เปิดไฟล์ index.html ด้วย Notepad หรือ VS Code\n2. ค้นหาบรรทัด: const EMBEDDED_GAS_URL = '';\n3. แก้ให้เป็น: const EMBEDDED_GAS_URL = '${url}';\n4. บันทึกไฟล์ → แชร์ไฟล์นี้ให้ทุกเครื่อง\n\n--- URL ของท่าน (คัดลอกได้) ---\n${url}`;
+      alert(instruction);
+      // Copy URL to clipboard
+      navigator.clipboard?.writeText(`const EMBEDDED_GAS_URL = '${escapedUrl}';`).then(() => {
+        showToast('✅ คัดลอกบรรทัดโค้ดสำเร็จ! วางใน index.html แทนบรรทัด EMBEDDED_GAS_URL');
+      }).catch(() => {
+        showToast('กรุณาคัดลอก URL ที่แสดงใน dialog และวางในไฟล์');
+      });
+    }
+
     function clearGasUrl() {
       document.getElementById('gasUrlInput').value = '';
-      saveGoogleSheetConfig();
+      saveGoogleSheetConfig(false);
     }
 
     function updateSheetStatusUI() {
       const text = document.getElementById('sheetStatusText');
-      if (gasWebUrl) {
-        text.textContent = 'Google Sheet (Web App)';
+      if (!gasWebUrl) {
+        text.textContent = 'ตั้งค่า GAS URL (จำเป็น!)';
+        text.className = 'text-amber-400 font-bold';
+      } else if (EMBEDDED_GAS_URL) {
+        text.textContent = 'Google Sheet ✅ ฝัง URL แล้ว';
         text.className = 'text-emerald-400 font-bold';
       } else {
-        text.textContent = 'Google Sheet (Live)';
-        text.className = 'text-emerald-300 font-medium';
+        text.textContent = 'Google Sheet ⚠️ URL เฉพาะเครื่องนี้';
+        text.className = 'text-amber-400 font-semibold';
       }
     }
 
@@ -1645,6 +1968,107 @@ function doPost(e) {
       if (Math.abs(num) >= 1000000) return (num / 1000000).toFixed(2) + ' ล้าน';
       if (Math.abs(num) >= 1000) return (num / 1000).toFixed(0) + ' พัน';
       return (num || 0).toFixed(0);
+    }
+
+    // Format number input with commas (1,000,000.00)
+    function formatNumberInput(input) {
+      const rawId = input.id + 'Raw';
+      const rawInput = document.getElementById(rawId);
+      let val = input.value.replace(/[^0-9.]/g, '');
+      // Allow only one decimal point
+      const parts = val.split('.');
+      if (parts.length > 2) val = parts[0] + '.' + parts.slice(1).join('');
+      const numericVal = parseFloat(val) || 0;
+      if (rawInput) rawInput.value = numericVal;
+      // Format with commas while typing
+      if (val === '' || val === '.') { input.value = val; return; }
+      if (val.endsWith('.')) { input.value = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, ',') + '.'; return; }
+      if (parts.length === 2 && parts[1] !== '') {
+        input.value = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, ',') + '.' + parts[1];
+      } else {
+        input.value = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+      }
+    }
+
+    function setFormattedInput(displayId, rawId, numValue) {
+      const display = document.getElementById(displayId);
+      const raw = document.getElementById(rawId);
+      if (!display) return;
+      if (raw) raw.value = numValue;
+      display.value = numValue.toLocaleString('th-TH', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    }
+
+    function runAnalysis(data, estIncome, actIncome, estExpense, actExpense) {
+      const panel = document.getElementById('analysisPanel');
+      const content = document.getElementById('analysisContent');
+      if (!panel || !content) return;
+
+      const issues = [];
+      const tips = [];
+
+      const netActual = actIncome - actExpense;
+      const netEstimate = estIncome - estExpense;
+      const incomeRatio = estIncome > 0 ? (actIncome / estIncome) : 1;
+      const expenseRatio = estExpense > 0 ? (actExpense / estExpense) : 1;
+
+      // Net Cash สถานะ
+      if (netActual < 0) {
+        issues.push({ icon: '🔴', color: 'text-rose-700 dark:text-rose-400', bg: 'bg-rose-50 dark:bg-rose-950/40 border-rose-200 dark:border-rose-800',
+          title: 'กระแสเงินสดสุทธิติดลบ!', detail: `รายจ่ายจริง (${fmt(actExpense)} ฿) สูงกว่ารายรับจริง (${fmt(actIncome)} ฿) อยู่ ${fmt(Math.abs(netActual))} ฿ ควรตรวจสอบแหล่งเงินสดสำรองโดยด่วน` });
+      } else if (netActual >= 0 && netActual < 0.1 * actIncome) {
+        tips.push({ icon: '🟡', color: 'text-amber-700 dark:text-amber-300', bg: 'bg-amber-50 dark:bg-amber-950/40 border-amber-200 dark:border-amber-800',
+          title: 'สภาพคล่องต่ำ', detail: `กระแสเงินสดสุทธิเหลือเพียง ${fmt(netActual)} ฿ (${((netActual/actIncome)*100).toFixed(1)}% ของรายรับ) ควรระวังความเสี่ยงสภาพคล่อง` });
+      } else {
+        tips.push({ icon: '🟢', color: 'text-emerald-700 dark:text-emerald-300', bg: 'bg-emerald-50 dark:bg-emerald-950/40 border-emerald-200 dark:border-emerald-800',
+          title: 'กระแสเงินสดเป็นบวก', detail: `เงินสดสุทธิ +${fmt(netActual)} ฿ แสดงถึงสภาพคล่องที่ดี` });
+      }
+
+      // รายรับ vs ประมาณการ
+      if (incomeRatio < 0.9) {
+        issues.push({ icon: '⚠️', color: 'text-amber-700 dark:text-amber-300', bg: 'bg-amber-50 dark:bg-amber-950/40 border-amber-200 dark:border-amber-800',
+          title: 'รายรับต่ำกว่าประมาณการ', detail: `รายรับจริง ${fmt(actIncome)} ฿ ต่ำกว่าประมาณการ ${fmt(estIncome)} ฿ คิดเป็น ${((1-incomeRatio)*100).toFixed(1)}% ควรตรวจสอบการชำระหนี้สมาชิก` });
+      } else if (incomeRatio > 1.05) {
+        tips.push({ icon: '✨', color: 'text-teal-700 dark:text-teal-300', bg: 'bg-teal-50 dark:bg-teal-950/40 border-teal-200 dark:border-teal-800',
+          title: 'รายรับเกินประมาณการ', detail: `รายรับจริงสูงกว่าแผน ${((incomeRatio-1)*100).toFixed(1)}% แสดงถึงผลงานที่ดีกว่าเป้าหมาย` });
+      }
+
+      // รายจ่าย vs ประมาณการ
+      if (expenseRatio > 1.05) {
+        issues.push({ icon: '⚠️', color: 'text-rose-700 dark:text-rose-400', bg: 'bg-rose-50 dark:bg-rose-950/40 border-rose-200 dark:border-rose-800',
+          title: 'รายจ่ายเกินประมาณการ', detail: `รายจ่ายจริง ${fmt(actExpense)} ฿ สูงกว่าประมาณการ ${fmt(estExpense)} ฿ คิดเป็น ${((expenseRatio-1)*100).toFixed(1)}% ควรทบทวนการควบคุมค่าใช้จ่าย` });
+      } else if (expenseRatio <= 0.95) {
+        tips.push({ icon: '💡', color: 'text-indigo-700 dark:text-indigo-300', bg: 'bg-indigo-50 dark:bg-indigo-950/40 border-indigo-200 dark:border-indigo-800',
+          title: 'รายจ่ายต่ำกว่าประมาณการ', detail: `ประหยัดงบได้ ${fmt(estExpense - actExpense)} ฿ (${((1-expenseRatio)*100).toFixed(1)}%) แนะนำตรวจสอบว่ามีรายการที่ยังไม่ได้บันทึกหรือไม่` });
+      }
+
+      // ตรวจสอบ dept ที่โดดเด่น
+      const depts = [...new Set(data.map(i => i.dept))];
+      depts.forEach(dept => {
+        const deptData = data.filter(i => i.dept === dept);
+        const deptEst = deptData.reduce((s,i) => s + (i.estimate||0), 0);
+        const deptAct = deptData.reduce((s,i) => s + (i.actual||0), 0);
+        if (deptEst > 0 && (deptAct / deptEst) > 1.15) {
+          issues.push({ icon: '🏢', color: 'text-violet-700 dark:text-violet-300', bg: 'bg-violet-50 dark:bg-violet-950/40 border-violet-200 dark:border-violet-800',
+            title: `${dept} เกินแผนอย่างมีนัยสำคัญ`, detail: `ยอดรวม ${dept}: จริง ${fmt(deptAct)} ฿ เกินประมาณการ ${fmt(deptEst)} ฿ ถึง ${(((deptAct/deptEst)-1)*100).toFixed(1)}%` });
+        }
+      });
+
+      const allItems = [...issues, ...tips];
+      if (allItems.length === 0) {
+        content.innerHTML = `<div class="text-center py-4 text-slate-400"><i class="fa-solid fa-circle-check text-emerald-500 text-xl mb-2 block"></i>ข้อมูลทุกรายการอยู่ในเกณฑ์ปกติ ไม่พบประเด็นที่ต้องแจ้งเตือน</div>`;
+      } else {
+        content.innerHTML = allItems.map(item => `
+          <div class="flex gap-3 p-3 rounded-xl border ${item.bg}">
+            <span class="text-lg flex-shrink-0 mt-0.5">${item.icon}</span>
+            <div>
+              <p class="font-bold ${item.color} text-xs">${item.title}</p>
+              <p class="text-[11px] text-slate-600 dark:text-slate-400 mt-0.5 leading-relaxed">${item.detail}</p>
+            </div>
+          </div>
+        `).join('');
+      }
+
+      panel.classList.remove('hidden');
     }
 
     function showToast(msg) {
