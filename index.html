@@ -346,18 +346,7 @@
         </div>
       </div>
       <!-- Analysis Panel -->
-      <div id="analysisPanel" class="hidden w-full bg-white dark:bg-slate-900 p-4 sm:p-5 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm space-y-3">
-        <div class="flex items-center gap-2 mb-3">
-          <div class="w-8 h-8 bg-violet-100 dark:bg-violet-950/60 text-violet-700 dark:text-violet-300 rounded-xl flex items-center justify-center flex-shrink-0">
-            <i class="fa-solid fa-brain text-sm"></i>
-          </div>
-          <div>
-            <h3 class="font-bold text-slate-800 dark:text-slate-100 text-sm">วิเคราะห์ภาพรวมกระแสเงินสด</h3>
-            <p class="text-[11px] text-slate-400">ผลการวิเคราะห์อัตโนมัติจากข้อมูลในระบบ</p>
-          </div>
-        </div>
-        <div id="analysisContent" class="space-y-2 text-xs text-slate-700 dark:text-slate-300"></div>
-      </div>
+
 
     </div>
 
@@ -393,6 +382,7 @@
             <option value="ฝ่ายการเงิน">ฝ่ายการเงิน</option>
             <option value="ฝ่ายบัญชี">ฝ่ายบัญชี</option>
             <option value="ฝ่ายธุรการพัสดุ">ฝ่ายธุรการพัสดุ</option>
+            <option value="ผู้จัดการ">ผู้จัดการ</option>
           </select>
 
           <select id="typeFilter" onchange="renderTable()" class="bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-xs rounded-xl px-3 py-1.5 outline-none">
@@ -597,6 +587,7 @@
               <option value="ฝ่ายการเงิน">ฝ่ายการเงิน</option>
               <option value="ฝ่ายบัญชี">ฝ่ายบัญชี</option>
               <option value="ฝ่ายธุรการพัสดุ">ฝ่ายธุรการพัสดุ</option>
+              <option value="ผู้จัดการ">ผู้จัดการ</option>
             </select>
           </div>
         </div>
@@ -1040,7 +1031,8 @@ function postData(e) {
       // 1. Try Apps Script Web App URL if specified
       if (gasWebUrl) {
         try {
-          const res = await fetch(gasWebUrl);
+          const urlWithCacheBust = gasWebUrl + (gasWebUrl.includes('?') ? '&' : '?') + 't=' + Date.now();
+          const res = await fetch(urlWithCacheBust, { cache: 'no-store' });
           if (res.ok) {
             const data = await res.json();
             if (Array.isArray(data) && data.length > 0) {
@@ -1564,8 +1556,8 @@ function postData(e) {
             <p class="text-[11px] text-slate-500 mt-1">${incomeData.length} รับ / ${expenseData.length} จ่าย</p>
           </div>
         `;
-        // Run analysis
-        runAnalysis(data, estIncome, actIncome, estExpense, actExpense);
+        // Analysis panel has been removed per request
+        // runAnalysis(data, estIncome, actIncome, estExpense, actExpense);
       } else {
         kpiContainer.innerHTML = `
           <div class="bg-white dark:bg-slate-900 p-4 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm">
@@ -1903,10 +1895,10 @@ function postData(e) {
         showToast(`⏳ กำลังบันทึก "${name}" ไปยัง Google Sheet...`);
         const success = await syncToGoogleSheet(action, { item: itemData });
         showToast(success
-          ? `✅ บันทึก "${name}" ไปยัง Google Sheet สำเร็จ`
-          : `💾 บันทึกในเครื่องสำเร็จ แต่ไม่สามารถส่งไป Google Sheet ได้`);
+          ? `✅ บันทึกข้อมูลด้วย: บันทึก "${name}" ไปยัง Google Sheet สำเร็จ`
+          : `💾 บันทึกข้อมูลด้วย: บันทึกในเครื่องสำเร็จ แต่ไม่สามารถส่งไป Google Sheet ได้`);
       } else {
-        showToast(`💾 บันทึก "${name}" ในเครื่องนี้สำเร็จ (ยังไม่ได้ตั้งค่า GAS URL)`)
+        showToast(`💾 บันทึกข้อมูลด้วย: บันทึก "${name}" ในเครื่องนี้สำเร็จ (ยังไม่ได้ตั้งค่า GAS URL)`)
       }
     }
 
@@ -2126,78 +2118,7 @@ function postData(e) {
       display.value = numValue.toLocaleString('th-TH', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
     }
 
-    function runAnalysis(data, estIncome, actIncome, estExpense, actExpense) {
-      const panel = document.getElementById('analysisPanel');
-      const content = document.getElementById('analysisContent');
-      if (!panel || !content) return;
 
-      const issues = [];
-      const tips = [];
-
-      const netActual = actIncome - actExpense;
-      const netEstimate = estIncome - estExpense;
-      const incomeRatio = estIncome > 0 ? (actIncome / estIncome) : 1;
-      const expenseRatio = estExpense > 0 ? (actExpense / estExpense) : 1;
-
-      // Net Cash สถานะ
-      if (netActual < 0) {
-        issues.push({ icon: '🔴', color: 'text-rose-700 dark:text-rose-400', bg: 'bg-rose-50 dark:bg-rose-950/40 border-rose-200 dark:border-rose-800',
-          title: 'กระแสเงินสดสุทธิติดลบ!', detail: `รายจ่ายจริง (${fmt(actExpense)} ฿) สูงกว่ารายรับจริง (${fmt(actIncome)} ฿) อยู่ ${fmt(Math.abs(netActual))} ฿ ควรตรวจสอบแหล่งเงินสดสำรองโดยด่วน` });
-      } else if (netActual >= 0 && netActual < 0.1 * actIncome) {
-        tips.push({ icon: '🟡', color: 'text-amber-700 dark:text-amber-300', bg: 'bg-amber-50 dark:bg-amber-950/40 border-amber-200 dark:border-amber-800',
-          title: 'สภาพคล่องต่ำ', detail: `กระแสเงินสดสุทธิเหลือเพียง ${fmt(netActual)} ฿ (${((netActual/actIncome)*100).toFixed(1)}% ของรายรับ) ควรระวังความเสี่ยงสภาพคล่อง` });
-      } else {
-        tips.push({ icon: '🟢', color: 'text-emerald-700 dark:text-emerald-300', bg: 'bg-emerald-50 dark:bg-emerald-950/40 border-emerald-200 dark:border-emerald-800',
-          title: 'กระแสเงินสดเป็นบวก', detail: `เงินสดสุทธิ +${fmt(netActual)} ฿ แสดงถึงสภาพคล่องที่ดี` });
-      }
-
-      // รายรับ vs ประมาณการ
-      if (incomeRatio < 0.9) {
-        issues.push({ icon: '⚠️', color: 'text-amber-700 dark:text-amber-300', bg: 'bg-amber-50 dark:bg-amber-950/40 border-amber-200 dark:border-amber-800',
-          title: 'รายรับต่ำกว่าประมาณการ', detail: `รายรับจริง ${fmt(actIncome)} ฿ ต่ำกว่าประมาณการ ${fmt(estIncome)} ฿ คิดเป็น ${((1-incomeRatio)*100).toFixed(1)}% ควรตรวจสอบการชำระหนี้สมาชิก` });
-      } else if (incomeRatio > 1.05) {
-        tips.push({ icon: '✨', color: 'text-teal-700 dark:text-teal-300', bg: 'bg-teal-50 dark:bg-teal-950/40 border-teal-200 dark:border-teal-800',
-          title: 'รายรับเกินประมาณการ', detail: `รายรับจริงสูงกว่าแผน ${((incomeRatio-1)*100).toFixed(1)}% แสดงถึงผลงานที่ดีกว่าเป้าหมาย` });
-      }
-
-      // รายจ่าย vs ประมาณการ
-      if (expenseRatio > 1.05) {
-        issues.push({ icon: '⚠️', color: 'text-rose-700 dark:text-rose-400', bg: 'bg-rose-50 dark:bg-rose-950/40 border-rose-200 dark:border-rose-800',
-          title: 'รายจ่ายเกินประมาณการ', detail: `รายจ่ายจริง ${fmt(actExpense)} ฿ สูงกว่าประมาณการ ${fmt(estExpense)} ฿ คิดเป็น ${((expenseRatio-1)*100).toFixed(1)}% ควรทบทวนการควบคุมค่าใช้จ่าย` });
-      } else if (expenseRatio <= 0.95) {
-        tips.push({ icon: '💡', color: 'text-indigo-700 dark:text-indigo-300', bg: 'bg-indigo-50 dark:bg-indigo-950/40 border-indigo-200 dark:border-indigo-800',
-          title: 'รายจ่ายต่ำกว่าประมาณการ', detail: `ประหยัดงบได้ ${fmt(estExpense - actExpense)} ฿ (${((1-expenseRatio)*100).toFixed(1)}%) แนะนำตรวจสอบว่ามีรายการที่ยังไม่ได้บันทึกหรือไม่` });
-      }
-
-      // ตรวจสอบ dept ที่โดดเด่น
-      const depts = [...new Set(data.map(i => i.dept))];
-      depts.forEach(dept => {
-        const deptData = data.filter(i => i.dept === dept);
-        const deptEst = deptData.reduce((s,i) => s + (i.estimate||0), 0);
-        const deptAct = deptData.reduce((s,i) => s + (i.actual||0), 0);
-        if (deptEst > 0 && (deptAct / deptEst) > 1.15) {
-          issues.push({ icon: '🏢', color: 'text-violet-700 dark:text-violet-300', bg: 'bg-violet-50 dark:bg-violet-950/40 border-violet-200 dark:border-violet-800',
-            title: `${dept} เกินแผนอย่างมีนัยสำคัญ`, detail: `ยอดรวม ${dept}: จริง ${fmt(deptAct)} ฿ เกินประมาณการ ${fmt(deptEst)} ฿ ถึง ${(((deptAct/deptEst)-1)*100).toFixed(1)}%` });
-        }
-      });
-
-      const allItems = [...issues, ...tips];
-      if (allItems.length === 0) {
-        content.innerHTML = `<div class="text-center py-4 text-slate-400"><i class="fa-solid fa-circle-check text-emerald-500 text-xl mb-2 block"></i>ข้อมูลทุกรายการอยู่ในเกณฑ์ปกติ ไม่พบประเด็นที่ต้องแจ้งเตือน</div>`;
-      } else {
-        content.innerHTML = allItems.map(item => `
-          <div class="flex gap-3 p-3 rounded-xl border ${item.bg}">
-            <span class="text-lg flex-shrink-0 mt-0.5">${item.icon}</span>
-            <div>
-              <p class="font-bold ${item.color} text-xs">${item.title}</p>
-              <p class="text-[11px] text-slate-600 dark:text-slate-400 mt-0.5 leading-relaxed">${item.detail}</p>
-            </div>
-          </div>
-        `).join('');
-      }
-
-      panel.classList.remove('hidden');
-    }
 
     function showToast(msg) {
       const toast = document.getElementById('toastBox');
