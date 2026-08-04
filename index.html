@@ -1573,10 +1573,10 @@ function postData(e) {
           `;
         } else if (hasActual) {
           kpiHtml += `
-          <!-- Net Cash จริง -->
+          <!-- คงเหลือสุทธิ -->
           <div class="bg-white dark:bg-slate-900 p-4 rounded-2xl border border-l-4 border-l-indigo-500 border-slate-200 dark:border-slate-800 shadow-sm relative overflow-hidden">
             <div class="flex items-center justify-between mb-1.5">
-              <span class="text-[11px] text-indigo-600 dark:text-indigo-400 font-bold uppercase tracking-wide">Net Cash จริง</span>
+              <span class="text-[11px] text-indigo-600 dark:text-indigo-400 font-bold uppercase tracking-wide">คงเหลือสุทธิ</span>
               <span class="w-7 h-7 bg-indigo-100 dark:bg-indigo-950 text-indigo-700 dark:text-indigo-300 rounded-lg flex items-center justify-center text-xs"><i class="fa-solid fa-scale-balanced"></i></span>
             </div>
             <p class="text-lg font-bold ${netActual >= 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-600'} number-cell">${netActual < 0 ? '' : '+'}${fmt(netActual)} ฿</p>
