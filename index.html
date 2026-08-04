@@ -1522,78 +1522,79 @@ function postData(e) {
       const isLog = logToggle ? logToggle.checked : false;
 
       mainChartInstance = new Chart(ctx, {
-        type: 'line',
+        type: 'bar',
         data: {
           labels: labels,
           datasets: [
             {
+              // ── ประมาณการรับ: เส้นประสีเขียวอ่อน ──
+              type: 'line',
               label: 'ประมาณการรับ',
               data: incEstData,
               yAxisID: 'yLeft',
               borderColor: '#34D399',
-              backgroundColor: gradIncEst,
-              borderWidth: 2,
+              backgroundColor: 'rgba(52,211,153,0.08)',
+              borderWidth: 2.5,
               borderDash: [8, 5],
               pointBackgroundColor: '#34D399',
               pointBorderColor: '#fff',
               pointBorderWidth: 2,
-              pointRadius: 4,
-              pointHoverRadius: 7,
-              fill: false,
+              pointRadius: 5,
+              pointHoverRadius: 8,
+              fill: true,
               tension: 0.35,
-              spanGaps: false
+              spanGaps: false,
+              order: 1
             },
             {
+              // ── รับจริง: แท่งสีเขียวเข้ม ──
+              type: 'bar',
               label: 'รับจริง',
               data: incActData,
               yAxisID: 'yLeft',
+              backgroundColor: 'rgba(5,150,105,0.75)',
               borderColor: '#059669',
-              backgroundColor: gradInc,
-              borderWidth: 3,
-              pointBackgroundColor: '#059669',
-              pointBorderColor: '#fff',
-              pointBorderWidth: 2,
-              pointRadius: 5,
-              pointHoverRadius: 8,
-              fill: true,
-              tension: 0.35,
-              spanGaps: false
+              borderWidth: 1.5,
+              borderRadius: 6,
+              borderSkipped: false,
+              hoverBackgroundColor: 'rgba(5,150,105,0.95)',
+              order: 2
             },
             {
+              // ── ประมาณการจ่าย: เส้นประสีแดงอ่อน ──
+              type: 'line',
               label: 'ประมาณการจ่าย',
               data: expEstData,
               yAxisID: 'yRight',
-              borderColor: '#FCA5A5',
-              backgroundColor: gradExpEst,
-              borderWidth: 2,
+              borderColor: '#F87171',
+              backgroundColor: 'rgba(248,113,113,0.08)',
+              borderWidth: 2.5,
               borderDash: [8, 5],
-              pointBackgroundColor: '#FCA5A5',
-              pointBorderColor: '#fff',
-              pointBorderWidth: 2,
-              pointRadius: 4,
-              pointHoverRadius: 7,
-              fill: false,
-              tension: 0.35,
-              spanGaps: false
-            },
-            {
-              label: 'จ่ายจริง',
-              data: expActData,
-              yAxisID: 'yRight',
-              borderColor: '#EF4444',
-              backgroundColor: gradExp,
-              borderWidth: 3,
-              pointBackgroundColor: '#EF4444',
+              pointBackgroundColor: '#F87171',
               pointBorderColor: '#fff',
               pointBorderWidth: 2,
               pointRadius: 5,
               pointHoverRadius: 8,
               fill: true,
               tension: 0.35,
-              spanGaps: false
+              spanGaps: false,
+              order: 1
+            },
+            {
+              // ── จ่ายจริง: แท่งสีแดงเข้ม ──
+              type: 'bar',
+              label: 'จ่ายจริง',
+              data: expActData,
+              yAxisID: 'yRight',
+              backgroundColor: 'rgba(220,38,38,0.72)',
+              borderColor: '#DC2626',
+              borderWidth: 1.5,
+              borderRadius: 6,
+              borderSkipped: false,
+              hoverBackgroundColor: 'rgba(220,38,38,0.95)',
+              order: 2
             }
           ]
-        },
         options: {
           responsive: true,
           maintainAspectRatio: false,
