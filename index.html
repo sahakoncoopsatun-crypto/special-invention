@@ -317,24 +317,18 @@
           <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
             <div>
               <h3 class="font-bold text-white text-sm sm:text-base flex items-center gap-2">
-                <i class="fa-solid fa-chart-area text-emerald-400"></i>
-                <span id="chart1Title">ภาพรวมกระแสเงินสด: ประมาณการ vs จริง</span>
+                <i class="fa-solid fa-chart-line text-indigo-400"></i>
+                <span id="chart1Title">แผนภูมิผสม (Combo Chart) เปรียบเทียบประมาณการว่าจะจ่ายจริง VS เกิดขึ้นจริง</span>
               </h3>
-              <p class="text-xs text-slate-400 mt-1" id="chart1Sub">สีเขียว = รายรับ · สีแดง = รายจ่าย · เส้นประ = ประมาณการ · เส้นทึบ = จริง · แกน Y ซ้าย = รายรับ, แกน Y ขวา = รายจ่าย</p>
+              <p class="text-xs text-slate-400 mt-1" id="chart1Sub">เปรียบเทียบเป้าหมายประมาณการ (กราฟเส้น) ชนกับยอดเกิดขึ้นจริง (กราฟแท่ง) จำแนกตามรายการ</p>
             </div>
             <!-- Legend Pills -->
             <div class="flex flex-wrap items-center gap-2 text-[11px] font-semibold">
-              <span class="flex items-center gap-1.5 bg-emerald-500/20 text-emerald-300 px-2.5 py-1 rounded-full border border-emerald-500/30">
-                <span class="w-5 border-t-2 border-dashed border-emerald-400"></span>ประมาณการรับ
-              </span>
-              <span class="flex items-center gap-1.5 bg-emerald-600/30 text-emerald-300 px-2.5 py-1 rounded-full border border-emerald-600/40">
-                <span class="w-5 border-t-2 border-emerald-400"></span>รับจริง
+              <span class="flex items-center gap-1.5 bg-indigo-500/20 text-indigo-300 px-2.5 py-1 rounded-full border border-indigo-500/30">
+                <span class="w-3 h-3 bg-indigo-500 rounded-full"></span>ประมาณการว่าจะจ่ายจริง (Estimate)
               </span>
               <span class="flex items-center gap-1.5 bg-rose-500/20 text-rose-300 px-2.5 py-1 rounded-full border border-rose-500/30">
-                <span class="w-5 border-t-2 border-dashed border-rose-400"></span>ประมาณการจ่าย
-              </span>
-              <span class="flex items-center gap-1.5 bg-rose-600/30 text-rose-300 px-2.5 py-1 rounded-full border border-rose-600/40">
-                <span class="w-5 border-t-2 border-rose-400"></span>จ่ายจริง
+                <span class="w-3 h-3 bg-rose-500 rounded-full"></span>เกิดขึ้นจริง (Actual)
               </span>
             </div>
           </div>
@@ -344,11 +338,7 @@
           <div style="height: 420px; position: relative;">
             <canvas id="mainChart"></canvas>
           </div>
-          <!-- Axis Labels -->
-          <div class="flex justify-between mt-2 px-1">
-            <span class="text-[10px] font-semibold text-emerald-600 dark:text-emerald-400 flex items-center gap-1">
-              <i class="fa-solid fa-circle text-[6px]"></i> แกน Y ซ้าย: ยอดรายรับ (ล้านบาท)
-            </span>
+        </div>            </span>
             <span class="text-[10px] font-semibold text-rose-600 dark:text-rose-400 flex items-center gap-1">
               ยอดรายจ่าย (ล้านบาท) <i class="fa-solid fa-circle text-[6px]"></i>
             </span>
@@ -1609,46 +1599,22 @@ function postData(e) {
       if (!canvasEl) return;
       const ctx = canvasEl.getContext('2d');
 
-      // ── สร้าง gradient fills ──
-      const gradInc = ctx.createLinearGradient(0, 0, 0, 420);
-      gradInc.addColorStop(0, 'rgba(16,185,129,0.22)');
-      gradInc.addColorStop(1, 'rgba(16,185,129,0)');
-
-      const gradIncEst = ctx.createLinearGradient(0, 0, 0, 420);
-      gradIncEst.addColorStop(0, 'rgba(110,231,183,0.14)');
-      gradIncEst.addColorStop(1, 'rgba(110,231,183,0)');
-
-      const gradExp = ctx.createLinearGradient(0, 0, 0, 420);
-      gradExp.addColorStop(0, 'rgba(239,68,68,0.18)');
-      gradExp.addColorStop(1, 'rgba(239,68,68,0)');
-
-      const gradExpEst = ctx.createLinearGradient(0, 0, 0, 420);
-      gradExpEst.addColorStop(0, 'rgba(252,165,165,0.12)');
-      gradExpEst.addColorStop(1, 'rgba(252,165,165,0)');
-
-      // ── แยกข้อมูล ──
-      const incomeItems = data.filter(i => i.type === 'รายการรับ');
-      const expenseItems = data.filter(i => i.type === 'รายการจ่าย');
+      // ── สร้าง labels และ datasets ──
       const trim = (n, len) => n.length > len ? n.slice(0, len) + '…' : n;
+      const labels = data.map(i => trim(i.name, 25));
 
-      // ใช้ทุก label รวมกัน (ใส่ index เพื่อให้ label ไม่ซ้ำ)
-      const allItems = data;
-      const labels = allItems.map(i => trim(i.name, 22));
-
-      // สร้าง map index สำหรับ income/expense
-      const incomeIndices = allItems.map((it, idx) => it.type === 'รายการรับ' ? idx : null);
-      const expenseIndices = allItems.map((it, idx) => it.type === 'รายการจ่าย' ? idx : null);
-
-      const incEstData = allItems.map(i => i.type === 'รายการรับ' ? (i.estimate || 0) : null);
-      const incActData = allItems.map(i => i.type === 'รายการรับ' ? (i.actual || 0) : null);
-      const expEstData = allItems.map(i => i.type === 'รายการจ่าย' ? (i.estimate || 0) : null);
-      const expActData = allItems.map(i => i.type === 'รายการจ่าย' ? (i.actual || 0) : null);
+      const estData = data.map(i => i.estimate || 0);
+      const actData = data.map(i => i.actual || 0);
+      
+      // สีของกราฟแท่ง (Actual): เขียว ถ้ารายรับ, แดง ถ้ารายจ่าย
+      const actColors = data.map(i => i.type === 'รายการรับ' ? 'rgba(34, 197, 94, 0.85)' : 'rgba(239, 68, 68, 0.85)');
+      const actBorderColors = data.map(i => i.type === 'รายการรับ' ? '#16a34a' : '#dc2626');
 
       const fmtTick = v => {
         if (v === null || v === undefined) return '';
-        if (Math.abs(v) >= 1000000) return (v / 1000000).toFixed(1) + ' ล.';
-        if (Math.abs(v) >= 1000) return (v / 1000).toFixed(0) + ' k';
-        return v;
+        if (Math.abs(v) >= 1000000) return (v / 1000000).toFixed(2) + ' ล้าน';
+        if (Math.abs(v) >= 10000) return (v / 10000).toFixed(2) + ' หมื่น';
+        return v.toLocaleString('th-TH');
       };
 
       const logToggle = document.getElementById('logScaleToggle');
@@ -1660,71 +1626,29 @@ function postData(e) {
           labels: labels,
           datasets: [
             {
-              // ── ประมาณการรับ: เส้นประสีเขียวอ่อน ──
               type: 'line',
-              label: 'ประมาณการรับ',
-              data: incEstData,
-              yAxisID: 'yLeft',
-              borderColor: '#34D399',
-              backgroundColor: 'rgba(52,211,153,0.08)',
+              label: 'ประมาณการว่าจะจ่ายจริง (Estimate)',
+              data: estData,
+              borderColor: '#6366f1',
+              backgroundColor: 'rgba(99, 102, 241, 0.1)',
               borderWidth: 2.5,
-              borderDash: [8, 5],
-              pointBackgroundColor: '#34D399',
+              pointBackgroundColor: '#6366f1',
               pointBorderColor: '#fff',
               pointBorderWidth: 2,
               pointRadius: 5,
               pointHoverRadius: 8,
               fill: true,
               tension: 0.35,
-              spanGaps: false,
               order: 1
             },
             {
-              // ── รับจริง: แท่งสีเขียวเข้ม ──
               type: 'bar',
-              label: 'รับจริง',
-              data: incActData,
-              yAxisID: 'yLeft',
-              backgroundColor: 'rgba(5,150,105,0.75)',
-              borderColor: '#059669',
+              label: 'เกิดขึ้นจริง (Actual)',
+              data: actData,
+              backgroundColor: actColors,
+              borderColor: actBorderColors,
               borderWidth: 1.5,
               borderRadius: 6,
-              borderSkipped: false,
-              hoverBackgroundColor: 'rgba(5,150,105,0.95)',
-              order: 2
-            },
-            {
-              // ── ประมาณการจ่าย: เส้นประสีแดงอ่อน ──
-              type: 'line',
-              label: 'ประมาณการจ่าย',
-              data: expEstData,
-              yAxisID: 'yRight',
-              borderColor: '#F87171',
-              backgroundColor: 'rgba(248,113,113,0.08)',
-              borderWidth: 2.5,
-              borderDash: [8, 5],
-              pointBackgroundColor: '#F87171',
-              pointBorderColor: '#fff',
-              pointBorderWidth: 2,
-              pointRadius: 5,
-              pointHoverRadius: 8,
-              fill: true,
-              tension: 0.35,
-              spanGaps: false,
-              order: 1
-            },
-            {
-              // ── จ่ายจริง: แท่งสีแดงเข้ม ──
-              type: 'bar',
-              label: 'จ่ายจริง',
-              data: expActData,
-              yAxisID: 'yRight',
-              backgroundColor: 'rgba(220,38,38,0.72)',
-              borderColor: '#DC2626',
-              borderWidth: 1.5,
-              borderRadius: 6,
-              borderSkipped: false,
-              hoverBackgroundColor: 'rgba(220,38,38,0.95)',
               order: 2
             }
           ]
@@ -1735,9 +1659,7 @@ function postData(e) {
           interaction: { mode: 'index', intersect: false },
           animation: { duration: 600, easing: 'easeInOutQuart' },
           plugins: {
-            legend: {
-              display: false  // ใช้ custom legend ใน HTML แทน
-            },
+            legend: { display: false },
             tooltip: {
               backgroundColor: isDark ? 'rgba(2,6,23,0.95)' : 'rgba(15,23,42,0.93)',
               titleColor: '#f8fafc',
@@ -1747,32 +1669,17 @@ function postData(e) {
               padding: { x: 14, y: 12 },
               titleFont: { family: 'Sarabun', size: 13, weight: '700' },
               bodyFont: { family: 'Sarabun', size: 12 },
-              boxPadding: 6,
-              usePointStyle: true,
               callbacks: {
                 title: items => items[0]?.label ?? '',
                 label: ctx => {
-                  if (ctx.raw === null || ctx.raw === undefined) return null;
-                  const v = ctx.raw;
-                  const formatted = v.toLocaleString('th-TH', { minimumFractionDigits: 0 });
-                  const icon = ctx.datasetIndex < 2 ? '🟢' : '🔴';
-                  return ` ${icon} ${ctx.dataset.label}: ${formatted} ฿`;
+                  const v = ctx.raw || 0;
+                  return ` ${ctx.dataset.label}: ${v.toLocaleString('th-TH', {minimumFractionDigits:2})} ฿`;
                 },
                 afterBody: items => {
-                  const incEst = items.find(i => i.dataset.label === 'ประมาณการรับ')?.raw ?? 0;
-                  const incAct = items.find(i => i.dataset.label === 'รับจริง')?.raw ?? 0;
-                  const expEst = items.find(i => i.dataset.label === 'ประมาณการจ่าย')?.raw ?? 0;
-                  const expAct = items.find(i => i.dataset.label === 'จ่ายจริง')?.raw ?? 0;
-                  const lines = [];
-                  if (incEst && incAct) {
-                    const diff = incAct - incEst;
-                    lines.push(`  ${diff >= 0 ? '▲' : '▼'} รับ${diff >= 0 ? 'เกิน' : 'ขาด'}: ${Math.abs(diff).toLocaleString('th-TH')} ฿`);
-                  }
-                  if (expEst && expAct) {
-                    const diff = expAct - expEst;
-                    lines.push(`  ${diff > 0 ? '⚠' : '✓'} จ่าย${diff > 0 ? 'เกิน' : 'ประหยัด'}: ${Math.abs(diff).toLocaleString('th-TH')} ฿`);
-                  }
-                  return lines;
+                  const est = items.find(i => i.datasetIndex === 0)?.raw || 0;
+                  const act = items.find(i => i.datasetIndex === 1)?.raw || 0;
+                  const diff = act - est;
+                  return `  ผลต่าง: ${diff > 0 ? '+' : ''}${diff.toLocaleString('th-TH', {minimumFractionDigits:2})} ฿`;
                 }
               }
             }
@@ -1780,51 +1687,21 @@ function postData(e) {
           scales: {
             x: {
               grid: { color: gridColor, drawBorder: false },
-              border: { dash: [4, 4] },
-              ticks: {
-                color: textColor,
-                font: { family: 'Sarabun', size: 10, weight: '500' },
-                maxRotation: 40,
-                minRotation: 0,
-                autoSkip: true,
-                maxTicksLimit: 18
-              }
+              ticks: { color: textColor, font: { family: 'Sarabun', size: 10, weight: '500' }, maxRotation: 40, autoSkip: false }
             },
-            yLeft: {
+            y: {
               type: isLog ? 'logarithmic' : 'linear',
               position: 'left',
               grid: { color: gridColor, drawBorder: false },
-              border: { dash: [4, 4], color: 'rgba(52,211,153,0.3)' },
-              title: {
-                display: true,
-                text: 'รายรับ (บาท)',
-                color: '#34D399',
-                font: { family: 'Sarabun', size: 11, weight: '600' }
-              },
+              border: { dash: [4, 4] },
               ticks: {
-                color: '#34D399',
-                font: { family: 'Sarabun', size: 10 },
-                callback: fmtTick
-              }
-            },
-            yRight: {
-              type: isLog ? 'logarithmic' : 'linear',
-              position: 'right',
-              grid: { drawOnChartArea: false },
-              border: { color: 'rgba(239,68,68,0.3)' },
-              title: {
-                display: true,
-                text: 'รายจ่าย (บาท)',
-                color: '#F87171',
-                font: { family: 'Sarabun', size: 11, weight: '600' }
-              },
-              ticks: {
-                color: '#F87171',
-                font: { family: 'Sarabun', size: 10 },
+                color: textColor,
+                font: { family: 'Sarabun', size: 11, weight: '600' },
                 callback: fmtTick
               }
             }
           }
+        }
         }
       });
     }
