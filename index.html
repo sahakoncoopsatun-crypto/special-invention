@@ -1472,147 +1472,173 @@ function postData(e) {
       const textColor = isDark ? '#94a3b8' : '#64748b';
       const gridColor = isDark ? 'rgba(148,163,184,0.1)' : 'rgba(226,232,240,0.8)';
 
-      if (mainChartInstance) mainChartInstance.destroy();
-      const mainCtx = document.getElementById('mainComboChart').getContext('2d');
-      const labels = data.map(i => i.name.length > 25 ? i.name.slice(0, 25) + '...' : i.name);
+      const logToggle = document.getElementById('logScaleToggle');
+      const isLogScale = logToggle ? logToggle.checked : false;
 
-      if (currentTimeView === 'month_end') {
-        // แยกข้อมูลรายรับ และ รายจ่าย
-        const incomeItems = data.filter(i => i.type === 'รายการรับ');
-        const expenseItems = data.filter(i => i.type === 'รายการจ่าย');
+      if (incomeChartInstance) { incomeChartInstance.destroy(); incomeChartInstance = null; }
+      if (expenseChartInstance) { expenseChartInstance.destroy(); expenseChartInstance = null; }
 
-        // สร้าง labels รวมทั้งหมด (ไม่ซ้ำ)
-        const allLabels = [...new Set([
-          ...incomeItems.map(i => i.name.length > 22 ? i.name.slice(0, 22) + '…' : i.name),
-          ...expenseItems.map(i => i.name.length > 22 ? i.name.slice(0, 22) + '…' : i.name)
-        ])];
+      const incCtx = document.getElementById('incomeLineChart');
+      const expCtx = document.getElementById('expenseLineChart');
+      if (!incCtx || !expCtx) return;
 
-        // สร้าง map สำหรับ lookup
-        const incomeEstMap = {}; incomeItems.forEach(i => { incomeEstMap[i.name.length > 22 ? i.name.slice(0,22)+'…' : i.name] = i.estimate || 0; });
-        const incomeActMap = {}; incomeItems.forEach(i => { incomeActMap[i.name.length > 22 ? i.name.slice(0,22)+'…' : i.name] = i.actual || 0; });
-        const expEstMap = {}; expenseItems.forEach(i => { expEstMap[i.name.length > 22 ? i.name.slice(0,22)+'…' : i.name] = i.estimate || 0; });
-        const expActMap = {}; expenseItems.forEach(i => { expActMap[i.name.length > 22 ? i.name.slice(0,22)+'…' : i.name] = i.actual || 0; });
+      // แยกข้อมูลรายรับ และรายจ่าย
+      const incomeItems = data.filter(i => i.type === 'รายการรับ');
+      const expenseItems = data.filter(i => i.type === 'รายการจ่าย');
 
-        mainChartInstance = new Chart(mainCtx, {
-          type: 'bar',
-          data: {
-            labels: allLabels,
-            datasets: [
-              {
-                label: '📊 รายรับ (ประมาณการ)',
-                data: allLabels.map(l => incomeEstMap[l] || null),
-                backgroundColor: 'rgba(20, 184, 166, 0.55)',
-                borderColor: '#14b8a6',
-                borderWidth: 2,
-                borderRadius: 6,
-                borderSkipped: false,
-              },
-              {
-                label: '✅ รายรับจริง',
-                data: allLabels.map(l => incomeActMap[l] || null),
-                backgroundColor: 'rgba(22, 163, 74, 0.85)',
-                borderColor: '#16a34a',
-                borderWidth: 2,
-                borderRadius: 6,
-                borderSkipped: false,
-              },
-              {
-                label: '📋 รายจ่าย (ประมาณการ)',
-                data: allLabels.map(l => expEstMap[l] || null),
-                backgroundColor: 'rgba(251, 146, 60, 0.55)',
-                borderColor: '#fb923c',
-                borderWidth: 2,
-                borderRadius: 6,
-                borderSkipped: false,
-              },
-              {
-                label: '❌ รายจ่ายจริง',
-                data: allLabels.map(l => expActMap[l] || null),
-                backgroundColor: 'rgba(225, 29, 72, 0.85)',
-                borderColor: '#e11d48',
-                borderWidth: 2,
-                borderRadius: 6,
-                borderSkipped: false,
-              }
-            ]
+      const trimName = (n, len) => n.length > len ? n.slice(0, len) + '…' : n;
+
+      const incLabels = incomeItems.map(i => trimName(i.name, 25));
+      const incEstData = incomeItems.map(i => i.estimate || 0);
+      const incActData = incomeItems.map(i => i.actual || 0);
+
+      const expLabels = expenseItems.map(i => trimName(i.name, 25));
+      const expEstData = expenseItems.map(i => i.estimate || 0);
+      const expActData = expenseItems.map(i => i.actual || 0);
+
+      // ตัวเลือก Log Scale ที่ใช้ร่วมกัน
+      const yAxis = {
+        type: isLogScale ? 'logarithmic' : 'linear',
+        grid: { color: gridColor, drawBorder: false, borderDash: [5, 5] },
+        ticks: {
+          color: textColor,
+          font: { family: 'Sarabun', size: 11 },
+          callback: function(value) {
+            if (value >= 1000000) return (value / 1000000).toFixed(1) + 'M';
+            if (value >= 1000) return (value / 1000).toFixed(0) + 'k';
+            return value;
+          }
+        }
+      };
+
+      const commonOpts = {
+        responsive: true,
+        maintainAspectRatio: false,
+        interaction: { mode: 'index', intersect: false },
+        plugins: {
+          legend: {
+            display: true,
+            position: 'top',
+            labels: {
+              color: textColor,
+              font: { family: 'Sarabun', size: 12, weight: '600' },
+              usePointStyle: true,
+              pointStyle: 'line',
+              padding: 20
+            }
           },
-          options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            plugins: {
-              legend: {
-                display: true,
-                position: 'top',
-                labels: { color: textColor, font: { family: 'Sarabun', size: 11, weight: '600' }, usePointStyle: true, padding: 16 }
-              },
-              tooltip: {
-                callbacks: {
-                  label: ctx => ctx.raw != null ? ` ${ctx.dataset.label}: ${fmt(ctx.raw)} บาท` : null
-                }
-              }
-            },
-            scales: {
-              x: {
-                ticks: { color: textColor, font: { family: 'Sarabun', size: 10 }, maxRotation: 35 },
-                grid: { display: false }
-              },
-              y: {
-                ticks: { color: textColor, font: { family: 'Sarabun', size: 10 }, callback: v => fmtShort(v) },
-                grid: { color: gridColor }
+          tooltip: {
+            backgroundColor: isDark ? 'rgba(15,23,42,0.95)' : 'rgba(255,255,255,0.97)',
+            titleColor: isDark ? '#f1f5f9' : '#0f172a',
+            bodyColor: isDark ? '#cbd5e1' : '#334155',
+            borderColor: isDark ? '#334155' : '#e2e8f0',
+            borderWidth: 1,
+            titleFont: { family: 'Sarabun', size: 13, weight: 'bold' },
+            bodyFont: { family: 'Sarabun', size: 12 },
+            padding: 12,
+            boxPadding: 6,
+            usePointStyle: true,
+            callbacks: {
+              label: function(ctx) {
+                const val = ctx.raw ?? 0;
+                return ' ' + ctx.dataset.label + ': ' + val.toLocaleString('en-US', { minimumFractionDigits: 2 }) + ' ฿';
               }
             }
           }
-        });
-      } else {
-        mainChartInstance = new Chart(mainCtx, {
-          type: 'bar',
-          data: {
-            labels: labels,
-            datasets: [
-              {
-                label: '✅ รายรับจริง',
-                data: data.map(i => i.type === 'รายการรับ' ? i.actual : null),
-                backgroundColor: 'rgba(22, 163, 74, 0.85)',
-                borderColor: '#16a34a',
-                borderRadius: 6,
-                borderWidth: 2,
-              },
-              {
-                label: '❌ รายจ่ายจริง',
-                data: data.map(i => i.type === 'รายการจ่าย' ? i.actual : null),
-                backgroundColor: 'rgba(225, 29, 72, 0.85)',
-                borderColor: '#e11d48',
-                borderRadius: 6,
-                borderWidth: 2,
-              },
-              {
-                type: 'line',
-                label: 'แนวโน้ม (Trend)',
-                data: data.map(i => i.actual),
-                borderColor: '#0284c7',
-                borderWidth: 2.5,
-                borderDash: [4, 4],
-                pointBackgroundColor: '#0284c7',
-                pointRadius: 5,
-                tension: 0.3,
-                fill: false,
-              }
-            ]
-          },
-          options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            plugins: {
-              legend: { display: true, position: 'top', labels: { color: textColor, font: { family: 'Sarabun', size: 11 }, usePointStyle: true } },
-              tooltip: { callbacks: { label: ctx => ctx.raw != null ? ` ${ctx.dataset.label}: ${fmt(ctx.raw)} บาท` : null } }
-            },
-            scales: {
-              x: { ticks: { color: textColor, font: { family: 'Sarabun', size: 10 } }, grid: { display: false } },
-              y: { ticks: { color: textColor, font: { family: 'Sarabun', size: 10 }, callback: v => fmtShort(v) }, grid: { color: gridColor } }
+        },
+        scales: {
+          x: {
+            grid: { color: gridColor, drawBorder: false },
+            ticks: {
+              color: textColor,
+              font: { family: 'Sarabun', size: 11, weight: '500' },
+              maxRotation: 45,
+              minRotation: 0
             }
-          }
-        });
-      }
+          },
+          y: yAxis
+        }
+      };
+
+      // ── กราฟที่ 1: รายรับ ──
+      incomeChartInstance = new Chart(incCtx.getContext('2d'), {
+        type: 'line',
+        data: {
+          labels: incLabels,
+          datasets: [
+            {
+              label: 'ประมาณการรับ (เส้นประ)',
+              data: incEstData,
+              borderColor: '#86EFAC',
+              backgroundColor: 'rgba(134,239,172,0.15)',
+              borderWidth: 2.5,
+              borderDash: [7, 4],
+              pointBackgroundColor: '#86EFAC',
+              pointBorderColor: '#fff',
+              pointBorderWidth: 2,
+              pointRadius: 5,
+              pointHoverRadius: 7,
+              fill: false,
+              tension: 0.25
+            },
+            {
+              label: 'รับจริง (เส้นทึบ)',
+              data: incActData,
+              borderColor: '#16A34A',
+              backgroundColor: 'rgba(22,163,74,0.12)',
+              borderWidth: 3,
+              pointBackgroundColor: '#16A34A',
+              pointBorderColor: '#fff',
+              pointBorderWidth: 2,
+              pointRadius: 6,
+              pointHoverRadius: 8,
+              fill: true,
+              tension: 0.25
+            }
+          ]
+        },
+        options: commonOpts
+      });
+
+      // ── กราฟที่ 2: รายจ่าย ──
+      expenseChartInstance = new Chart(expCtx.getContext('2d'), {
+        type: 'line',
+        data: {
+          labels: expLabels,
+          datasets: [
+            {
+              label: 'ประมาณการจ่าย (เส้นประ)',
+              data: expEstData,
+              borderColor: '#FCA5A5',
+              backgroundColor: 'rgba(252,165,165,0.15)',
+              borderWidth: 2.5,
+              borderDash: [7, 4],
+              pointBackgroundColor: '#FCA5A5',
+              pointBorderColor: '#fff',
+              pointBorderWidth: 2,
+              pointRadius: 5,
+              pointHoverRadius: 7,
+              fill: false,
+              tension: 0.25
+            },
+            {
+              label: 'จ่ายจริง (เส้นทึบ)',
+              data: expActData,
+              borderColor: '#DC2626',
+              backgroundColor: 'rgba(220,38,38,0.1)',
+              borderWidth: 3,
+              pointBackgroundColor: '#DC2626',
+              pointBorderColor: '#fff',
+              pointBorderWidth: 2,
+              pointRadius: 6,
+              pointHoverRadius: 8,
+              fill: true,
+              tension: 0.25
+            }
+          ]
+        },
+        options: commonOpts
+      });
     }
 
     function renderTable() {
