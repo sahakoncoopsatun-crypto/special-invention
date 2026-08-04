@@ -269,20 +269,35 @@
 
     <div class="grid grid-cols-1 gap-4">
       
-      <!-- Chart: Combo Chart (Full Width) -->
-      <div id="comboChartCard" class="w-full bg-white dark:bg-slate-900 p-4 sm:p-5 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm space-y-3">
+      <!-- Chart 1: Income Line Chart -->
+      <div id="incomeChartCard" class="w-full bg-white dark:bg-slate-900 p-4 sm:p-5 rounded-2xl border-l-4 border-l-emerald-500 border border-slate-200 dark:border-slate-800 shadow-sm space-y-3">
         <div class="flex items-center justify-between">
           <div>
             <h3 class="font-bold text-slate-800 dark:text-slate-100 text-sm sm:text-base flex items-center gap-2">
-              <i class="fa-solid fa-chart-line text-indigo-600"></i>
-              <span id="chart1Title">แผนภูมิเปรียบเทียบ: ประมาณการ vs เกิดขึ้นจริง แยกรายรับ-รายจ่าย</span>
+              <i class="fa-solid fa-arrow-trend-up text-emerald-600"></i>
+              <span id="chart1Title">1. กราฟเส้นแสดงแนวโน้ม "รายรับ" (ประมาณการรับ VS รับจริง)</span>
             </h3>
-            <p class="text-xs text-slate-400" id="chart1Sub">แสดงกราฟแท่งแบบแยกชัดเจน 4 ชุด: รายรับประมาณการ, รายรับจริง, รายจ่ายประมาณการ, รายจ่ายจริง</p>
+            <p class="text-xs text-slate-500 dark:text-slate-400 mt-1" id="chart1Sub">เปรียบเทียบแนวโน้มรายรับตามแผน (เส้นประ) และที่เกิดขึ้นจริง (เส้นทึบ)</p>
           </div>
-          <span class="text-[11px] bg-indigo-100 dark:bg-indigo-950/80 text-indigo-700 dark:text-indigo-300 font-bold px-2.5 py-1 rounded-lg" id="chart1Badge">แผนภูมิผสม</span>
         </div>
-        <div style="height: 380px; position: relative;">
-          <canvas id="mainComboChart"></canvas>
+        <div style="height: 320px; position: relative;" class="bg-slate-50/50 dark:bg-slate-800/30 rounded-xl p-2 border border-slate-100 dark:border-slate-700/50 mt-4">
+          <canvas id="incomeLineChart"></canvas>
+        </div>
+      </div>
+
+      <!-- Chart 2: Expense Line Chart -->
+      <div id="expenseChartCard" class="w-full bg-white dark:bg-slate-900 p-4 sm:p-5 rounded-2xl border-l-4 border-l-rose-500 border border-slate-200 dark:border-slate-800 shadow-sm space-y-3">
+        <div class="flex items-center justify-between">
+          <div>
+            <h3 class="font-bold text-slate-800 dark:text-slate-100 text-sm sm:text-base flex items-center gap-2">
+              <i class="fa-solid fa-arrow-trend-down text-rose-600"></i>
+              <span id="chart2Title">2. กราฟเส้นแสดงแนวโน้ม "รายจ่าย" (ประมาณการจ่าย VS จ่ายจริง)</span>
+            </h3>
+            <p class="text-xs text-slate-500 dark:text-slate-400 mt-1" id="chart2Sub">ติดตามกรอบงบประมาณรายจ่าย (เส้นประ) เปรียบเทียบกับค่าใช้จ่ายจริง (เส้นทึบ)</p>
+          </div>
+        </div>
+        <div style="height: 320px; position: relative;" class="bg-slate-50/50 dark:bg-slate-800/30 rounded-xl p-2 border border-slate-100 dark:border-slate-700/50 mt-4">
+          <canvas id="expenseLineChart"></canvas>
         </div>
       </div>
 
@@ -808,7 +823,8 @@ function postData(e) {
     let systemMode = 'executive'; 
     let isExecutiveLocked = false; 
     let currentTimeView = 'month_end'; 
-    let mainChartInstance = null;
+    let incomeChartInstance = null;
+    let expenseChartInstance = null;
     let isDark = false;
     // ใช้ EMBEDDED_GAS_URL ก่อน (ใช้ร่วมกันทุกเครื่อง) → ถ้าว่างค่อยดึงจาก localStorage
     let gasWebUrl = EMBEDDED_GAS_URL || localStorage.getItem('satun_coop_gas_url') || '';
@@ -1232,7 +1248,11 @@ function postData(e) {
         if (btnOpenHeader) btnOpenHeader.style.display = 'none';
         manageCols.forEach(col => col.style.display = 'none');
 
-        if (comboChartCard) comboChartCard.className = "w-full bg-white dark:bg-slate-900 p-4 sm:p-5 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm space-y-3";
+        const incCard = document.getElementById('incomeChartCard');
+        if (incCard) incCard.className = "w-full bg-white dark:bg-slate-900 p-4 sm:p-5 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm space-y-3";
+        const expCard = document.getElementById('expenseChartCard');
+        if (expCard) expCard.className = "w-full bg-white dark:bg-slate-900 p-4 sm:p-5 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm space-y-3";
+
         if (tableSectionCard) tableSectionCard.classList.add('hidden');
       } else {
         if (btnManage) btnManage.className = "px-3 py-1.5 rounded-lg font-semibold transition-all bg-amber-600 text-white shadow-sm";
@@ -1245,7 +1265,11 @@ function postData(e) {
         if (btnOpenHeader) btnOpenHeader.style.display = 'inline-flex';
         manageCols.forEach(col => col.style.display = 'inline-flex');
 
-        if (comboChartCard) comboChartCard.className = "w-full bg-white dark:bg-slate-900 p-4 sm:p-5 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm space-y-3";
+        const incCard = document.getElementById('incomeChartCard');
+        if (incCard) incCard.className = "w-full bg-white dark:bg-slate-900 p-4 sm:p-5 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm space-y-3";
+        const expCard = document.getElementById('expenseChartCard');
+        if (expCard) expCard.className = "w-full bg-white dark:bg-slate-900 p-4 sm:p-5 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm space-y-3";
+
         if (tableSectionCard) tableSectionCard.classList.remove('hidden');
       }
 
@@ -1263,29 +1287,33 @@ function postData(e) {
         }
       });
 
-      const chartBadge = document.getElementById('chart1Badge');
       const chart1Title = document.getElementById('chart1Title');
+      const chart2Title = document.getElementById('chart2Title');
       const chart1Sub = document.getElementById('chart1Sub');
+      const chart2Sub = document.getElementById('chart2Sub');
       const estHeader = document.getElementById('colEstimateHeader');
       const actHeader = document.getElementById('colActualHeader');
 
       if (view === 'month_end') {
-        chartBadge.textContent = 'แผนภูมิผสม (Combo)';
-        chart1Title.textContent = 'แผนภูมิผสม (Combo Chart) เปรียบเทียบประมาณการว่าจะจ่ายจริง VS เกิดขึ้นจริง';
-        chart1Sub.textContent = 'เปรียบเทียบเป้าหมายประมาณการ (กราฟเส้น) ชนกับยอดเกิดขึ้นจริง (กราฟแท่ง) จำแนกตามรายการ';
-        estHeader.textContent = 'ประมาณการว่าจะจ่ายจริง (บาท)';
+        chart1Title.textContent = 'แนวโน้ม "รายรับ"';
+        chart1Sub.textContent = 'เปรียบเทียบประมาณการรับ (เส้นประ) และรับจริง (เส้นทึบ)';
+        chart2Title.textContent = 'แนวโน้ม "รายจ่าย"';
+        chart2Sub.textContent = 'เปรียบเทียบงบประมาณจ่าย (เส้นประ) และจ่ายจริง (เส้นทึบ)';
+        estHeader.textContent = 'ประมาณการ (บาท)';
         actHeader.textContent = 'เกิดขึ้นจริง (บาท)';
       } else if (view === 'weekly') {
-        chartBadge.textContent = 'รายสัปดาห์ (Combo)';
-        chart1Title.textContent = 'แผนภูมิผสมสรุปกระแสเงินสดรายสัปดาห์';
-        chart1Sub.textContent = 'แสดงยอดเงินสดเกิดขึ้นจริง (กราฟแท่ง) ควบคู่กับเส้นแนวโน้มการเคลื่อนไหว (กราฟเส้น)';
-        estHeader.textContent = 'เป้าหมายงบประมาณ';
+        chart1Title.textContent = 'แนวโน้มรายรับสัปดาห์';
+        chart1Sub.textContent = 'ยอดรายรับเป้าหมายเทียบกับรายรับจริง';
+        chart2Title.textContent = 'แนวโน้มรายจ่ายสัปดาห์';
+        chart2Sub.textContent = 'ยอดรายจ่ายเป้าหมายเทียบกับรายจ่ายจริง';
+        estHeader.textContent = 'ประมาณการ (บาท)';
         actHeader.textContent = 'เกิดขึ้นจริง (บาท)';
       } else {
-        chartBadge.textContent = 'รายวัน (Combo)';
-        chart1Title.textContent = 'แผนภูมิผสมสรุปกระแสเงินสดรายวัน';
-        chart1Sub.textContent = 'แสดงการเคลื่อนไหวของเงินสดรับ-จ่ายจริงรายวัน (กราฟแท่ง) และทิศทางแนวโน้ม (กราฟเส้น)';
-        estHeader.textContent = 'เป้าหมายงบประมาณ';
+        chart1Title.textContent = 'แนวโน้มรายรับรายวัน';
+        chart1Sub.textContent = 'ความเคลื่อนไหวรายรับแต่ละวัน';
+        chart2Title.textContent = 'แนวโน้มรายจ่ายรายวัน';
+        chart2Sub.textContent = 'ความเคลื่อนไหวรายจ่ายแต่ละวัน';
+        estHeader.textContent = 'ประมาณการ (บาท)';
         actHeader.textContent = 'เกิดขึ้นจริง (บาท)';
       }
 
