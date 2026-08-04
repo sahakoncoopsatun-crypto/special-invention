@@ -1834,6 +1834,14 @@ function postData(e) {
         estGroup.style.display = 'none';
         actualLabel.textContent = 'จำนวนเงินเกิดขึ้นจริง (บาท):';
       }
+
+      if (datePickerInstance) {
+        if (dim === 'daily') {
+          datePickerInstance.set('mode', 'single');
+        } else {
+          datePickerInstance.set('mode', 'range');
+        }
+      }
     }
 
     async function saveEntry(e) {
