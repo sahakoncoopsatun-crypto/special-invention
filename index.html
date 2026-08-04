@@ -270,6 +270,41 @@
       </div>
     </div>
 
+    <!-- Publish Bar (Management Only) -->
+    <div id="publishBannerContainer" class="hidden manage-col bg-slate-100 dark:bg-slate-800/50 p-4 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-sm flex-col sm:flex-row items-center justify-between gap-4">
+      <div class="flex items-center gap-3">
+        <div id="publishStatusIcon" class="w-10 h-10 bg-slate-200 dark:bg-slate-700 text-slate-500 rounded-xl flex items-center justify-center text-lg">
+          <i class="fa-solid fa-eye-slash"></i>
+        </div>
+        <div>
+          <h4 class="font-bold text-slate-800 dark:text-slate-100" id="publishStatusTitle">ข้อมูลยังไม่ถูกเผยแพร่</h4>
+          <p class="text-[11px] text-slate-500 dark:text-slate-400" id="publishStatusDesc">ผู้บริหารจะไม่เห็นข้อมูลของงวดนี้ จนกว่าคุณจะกดเผยแพร่</p>
+        </div>
+      </div>
+      <div class="flex gap-2 w-full sm:w-auto">
+        <button onclick="togglePublishStatus(false)" id="btnUnpublishBtn" class="flex-1 sm:flex-none px-4 py-2 rounded-xl border border-slate-300 dark:border-slate-600 text-slate-600 dark:text-slate-300 font-bold text-xs hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors hidden">
+          <i class="fa-solid fa-eye-slash mr-1"></i> ยกเลิกการเผยแพร่
+        </button>
+        <button onclick="togglePublishStatus(true)" id="btnPublishBtn" class="flex-1 sm:flex-none px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-xs shadow-md transition-colors flex items-center justify-center gap-1.5">
+          <i class="fa-solid fa-bullhorn"></i> เผยแพร่ให้ผู้บริหาร
+        </button>
+      </div>
+    </div>
+
+    <!-- Unpublished View (Executive Only) -->
+    <div id="unpublishedExecutiveBanner" class="hidden flex-col items-center justify-center py-16 bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm text-center">
+      <div class="w-16 h-16 bg-slate-100 dark:bg-slate-800 text-slate-400 rounded-full flex items-center justify-center text-3xl mb-4">
+        <i class="fa-solid fa-lock"></i>
+      </div>
+      <h3 class="font-bold text-slate-700 dark:text-slate-200 text-lg">ข้อมูลอยู่ระหว่างการจัดทำ</h3>
+      <p class="text-sm text-slate-500 dark:text-slate-400 mt-2 max-w-sm">
+        ข้อมูลกระแสเงินสดของงวดนี้กำลังอยู่ในขั้นตอนการบันทึกและตรวจสอบโดยฝ่ายจัดการ จะแสดงผลเมื่อได้รับการเผยแพร่แล้ว
+      </p>
+    </div>
+
+    <!-- Dashboard Content Wrapper -->
+    <div id="dashboardContentWrapper" class="space-y-4 w-full">
+
     <!-- Executive KPI Overview Cards -->
     <div class="grid grid-cols-2 lg:grid-cols-4 gap-3.5" id="kpiGrid">
       <!-- Generated dynamically by JS -->
@@ -335,6 +370,9 @@
       </div>
 
     </div>
+
+    </div>
+    <!-- End of Dashboard Content Wrapper -->
 
     <div id="tableSectionCard" class="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden space-y-3">
       
@@ -1346,12 +1384,107 @@ function postData(e) {
       select.value = periods[0] || '';
     }
 
+    function checkPublishStatus(period) {
+      const publishRecord = appData.find(i => i.type === 'SYSTEM_META' && i.name === 'PUBLISH_STATUS' && i.dimension === currentTimeView && i.period === period);
+      return publishRecord && publishRecord.actual === 1;
+    }
+
+    async function togglePublishStatus(isPublishing) {
+      if (!gasWebUrl) {
+        showToast('กรุณาตั้งค่า Google Apps Script URL ก่อน', 'error');
+        return;
+      }
+      
+      const selectedPeriod = document.getElementById('periodSelect').value;
+      if (!selectedPeriod) return;
+
+      const publishId = `PUB_${currentTimeView}_${selectedPeriod.replace(/\s+/g, '_')}`;
+      
+      // Update local memory
+      let publishRecord = appData.find(i => i.type === 'SYSTEM_META' && i.name === 'PUBLISH_STATUS' && i.dimension === currentTimeView && i.period === selectedPeriod);
+      
+      const action = publishRecord ? 'update' : 'create';
+      
+      const newItem = {
+        id: publishRecord ? publishRecord.id : publishId,
+        dimension: currentTimeView,
+        period: selectedPeriod,
+        dept: 'SYSTEM',
+        type: 'SYSTEM_META',
+        name: 'PUBLISH_STATUS',
+        estimate: 0,
+        actual: isPublishing ? 1 : 0
+      };
+
+      if (action === 'create') {
+        appData.push(newItem);
+      } else {
+        Object.assign(publishRecord, newItem);
+      }
+
+      // Render to update UI immediately
+      renderDashboard();
+      
+      showToast(isPublishing ? 'กำลังเผยแพร่ข้อมูล...' : 'กำลังยกเลิกเผยแพร่...', 'info');
+
+      try {
+        const response = await fetch(gasWebUrl, {
+          method: 'POST',
+          body: JSON.stringify({ action: action, item: newItem })
+        });
+        const res = await response.json();
+        if (res.status === 'success') {
+          showToast(isPublishing ? 'เผยแพร่ข้อมูลเรียบร้อยแล้ว' : 'ยกเลิกการเผยแพร่เรียบร้อยแล้ว');
+        } else {
+          showToast('เกิดข้อผิดพลาด: ' + res.message, 'error');
+        }
+      } catch (err) {
+        showToast('เชื่อมต่อผิดพลาด', 'error');
+      }
+    }
+
     function renderDashboard() {
       const selectedPeriod = document.getElementById('periodSelect').value;
-      const periodData = appData.filter(i => i.dimension === currentTimeView && i.period === selectedPeriod);
+      const periodData = appData.filter(i => i.dimension === currentTimeView && i.period === selectedPeriod && i.type !== 'SYSTEM_META');
+      const isPublished = checkPublishStatus(selectedPeriod);
 
-      renderKPIs(periodData);
-      renderCharts(periodData);
+      // Handle Management Publish Banner UI
+      const pubIcon = document.getElementById('publishStatusIcon');
+      const pubTitle = document.getElementById('publishStatusTitle');
+      const pubDesc = document.getElementById('publishStatusDesc');
+      const btnPublish = document.getElementById('btnPublishBtn');
+      const btnUnpublish = document.getElementById('btnUnpublishBtn');
+
+      if (isPublished) {
+        if (pubIcon) { pubIcon.className = 'w-10 h-10 bg-emerald-100 dark:bg-emerald-900/60 text-emerald-600 dark:text-emerald-400 rounded-xl flex items-center justify-center text-lg'; pubIcon.innerHTML = '<i class="fa-solid fa-eye"></i>'; }
+        if (pubTitle) pubTitle.textContent = 'ข้อมูลถูกเผยแพร่แล้ว';
+        if (pubTitle) pubTitle.className = 'font-bold text-emerald-700 dark:text-emerald-400';
+        if (pubDesc) pubDesc.textContent = 'ผู้บริหารสามารถมองเห็นข้อมูลกราฟและสรุปยอดของงวดนี้ได้';
+        if (btnPublish) btnPublish.classList.add('hidden');
+        if (btnUnpublish) btnUnpublish.classList.remove('hidden');
+      } else {
+        if (pubIcon) { pubIcon.className = 'w-10 h-10 bg-slate-200 dark:bg-slate-700 text-slate-500 rounded-xl flex items-center justify-center text-lg'; pubIcon.innerHTML = '<i class="fa-solid fa-eye-slash"></i>'; }
+        if (pubTitle) pubTitle.textContent = 'ข้อมูลยังไม่ถูกเผยแพร่';
+        if (pubTitle) pubTitle.className = 'font-bold text-slate-800 dark:text-slate-100';
+        if (pubDesc) pubDesc.textContent = 'ผู้บริหารจะไม่เห็นข้อมูลของงวดนี้ จนกว่าคุณจะกดเผยแพร่';
+        if (btnPublish) btnPublish.classList.remove('hidden');
+        if (btnUnpublish) btnUnpublish.classList.add('hidden');
+      }
+
+      // Handle Executive View Visibility
+      const contentWrapper = document.getElementById('dashboardContentWrapper');
+      const unpublishedBanner = document.getElementById('unpublishedExecutiveBanner');
+
+      if (systemMode === 'executive' && !isPublished && selectedPeriod !== '') {
+        if (contentWrapper) contentWrapper.classList.add('hidden');
+        if (unpublishedBanner) unpublishedBanner.classList.replace('hidden', 'flex');
+      } else {
+        if (contentWrapper) contentWrapper.classList.remove('hidden');
+        if (unpublishedBanner) unpublishedBanner.classList.replace('flex', 'hidden');
+        renderKPIs(periodData);
+        renderCharts(periodData);
+      }
+      
       renderTable();
     }
 
